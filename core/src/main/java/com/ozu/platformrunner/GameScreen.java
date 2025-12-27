@@ -17,15 +17,13 @@ import com.badlogic.gdx.utils.Array;
 // Lütfen Player ve Platform'u 'entities', ResourceManager'ı 'managers' paketine taşıdığından emin ol.
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
-import com.ozu.platformrunner.managers.InputHandler;
-import com.ozu.platformrunner.managers.PoolManager;
-import com.ozu.platformrunner.managers.ResourceManager;
+import com.ozu.platformrunner.managers.*;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.entities.Bullet; // Mermiyi import et
-import com.ozu.platformrunner.managers.HUD;
+
 
 public class GameScreen implements Screen {
 
@@ -50,6 +48,8 @@ public class GameScreen implements Screen {
     private static final float WORLD_HEIGHT = 480;
 
     private final HUD hud;
+
+    private final SaveManager saveManager;
 
     public GameScreen() {
         // 1. Kamera ve Çizim Aracı Hazırlığı
@@ -86,6 +86,8 @@ public class GameScreen implements Screen {
 
         hud = new HUD();
         player.addObserver(hud);
+
+        saveManager = new SaveManager();
     }
 
     private void handleInput() {
@@ -112,6 +114,16 @@ public class GameScreen implements Screen {
         // TEST: Kendine zarar ver (Observer'ı denemek için)
         if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
             player.takeDamage(10);
+        }
+
+        // KAYDET (F5)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) {
+            saveManager.saveGame(player);
+        }
+
+        // YÜKLE (F9)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) {
+            saveManager.loadGame(player);
         }
     }
 

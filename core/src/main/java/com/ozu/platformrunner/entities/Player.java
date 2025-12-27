@@ -138,6 +138,11 @@ public class Player {
     }
 
     // Getter / Setter
+    public void setHealth(int health) {
+        this.health = health;
+        notifyObservers(GameEvent.HEALTH_CHANGED);
+    }
+    public AttackStrategy getAttackStrategy() { return attackStrategy; }
     public int getHealth() { return health; }
     public Rectangle getBounds() { return bounds; }
     public Vector2 getVelocity() { return velocity; }

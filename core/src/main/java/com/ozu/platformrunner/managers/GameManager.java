@@ -42,4 +42,8 @@ public class GameManager {
         currentLevel = 1;
         currentState = GameState.MENU;
     }
+
+    public void setLevel(int level) {
+        this.currentLevel = level;
+    }
 }
