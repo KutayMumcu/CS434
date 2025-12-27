@@ -19,6 +19,7 @@ import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.*;
 import com.ozu.platformrunner.entities.Enemy;
+import com.ozu.platformrunner.patterns.decorator.DoubleShotDecorator;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
@@ -124,6 +125,13 @@ public class GameScreen implements Screen {
         // YÜKLE (F9)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) {
             saveManager.loadGame(player);
+        }
+
+        // GÜÇLENDİRME AL (P Tuşu)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            // Mevcut stratejiyi al, DoubleShot ile sar ve tekrar oyuncuya ver
+            // Bu sayede kılıç varsa "Çift Vuran Kılıç", Yay varsa "Çift Atan Yay" olur.
+            player.equipWeapon(new DoubleShotDecorator(player.getAttackStrategy()));
         }
     }
 

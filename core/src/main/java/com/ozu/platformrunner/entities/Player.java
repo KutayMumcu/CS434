@@ -2,6 +2,7 @@ package com.ozu.platformrunner.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.ozu.platformrunner.patterns.decorator.StrategyDecorator;
 import com.ozu.platformrunner.patterns.state.IdleState;
 import com.ozu.platformrunner.patterns.state.PlayerState;
 import com.ozu.platformrunner.patterns.strategy.AttackStrategy;
@@ -135,6 +136,15 @@ public class Player {
         if (this.health == 0) {
             notifyObservers(GameEvent.PLAYER_DIED);
         }
+    }
+
+    // Mevcut stratejiyi bir dekoratörle sarmala
+    public void addPowerUp(StrategyDecorator decorator) {
+        // Dekoratörün içine şu anki stratejiyi koyuyoruz
+        // Ancak decorator constructor'ında zaten strategy istiyoruz,
+        // bu yüzden kullanımı GameScreen'de yapacağız.
+        this.attackStrategy = decorator;
+        System.out.println("Güçlendirme alındı! Yeni strateji: " + attackStrategy.getClass().getSimpleName());
     }
 
     // Getter / Setter
