@@ -1,128 +1,183 @@
 package com.ozu.platformrunner;
 
-// GameScreen.java
-import com.badlogic.gdx.*;
+// --- GEREKLİ LIBGDX IMPORTLARI ---
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen; // Hata veren kısım burasıydı
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
+
+// --- KENDİ SINIFLARIMIZIN IMPORTLARI ---
+// Eğer sınıfların yerleri farklıysa bu satırlar hata verir.
+// Lütfen Player ve Platform'u 'entities', ResourceManager'ı 'managers' paketine taşıdığından emin ol.
+import com.ozu.platformrunner.entities.Platform;
+import com.ozu.platformrunner.entities.Player;
+import com.ozu.platformrunner.managers.InputHandler;
+import com.ozu.platformrunner.managers.ResourceManager;
+import com.ozu.platformrunner.entities.Enemy;
+import com.ozu.platformrunner.patterns.factory.EnemyFactory;
 
 public class GameScreen implements Screen {
 
+    // Temel LibGDX bileşenleri
     private final SpriteBatch batch;
     private final OrthographicCamera camera;
+    private final InputHandler inputHandler;
+
+    // Oyun Nesneleri
     private final Player player;
     private final Array<Platform> platforms;
 
-    // Varlıklar
+    // Görseller (Artık ResourceManager'dan geliyor)
     private final Texture charTexture;
     private final Texture platformTexture;
 
-    // Dünya boyutu
+    private final Array<Enemy> enemies;
+
+    // Sabitler (Bunları ileride Constants sınıfına taşıyacağız)
     private static final float WORLD_WIDTH = 800;
     private static final float WORLD_HEIGHT = 480;
 
     public GameScreen() {
+        // 1. Kamera ve Çizim Aracı Hazırlığı
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
 
-        // Varlıkları yükle
-        charTexture = new Texture("char.png"); // assets/char.png
-        platformTexture = new Texture("platform.png"); // assets/platform.png
+        // 2. Varlıkları Yükle (Facade Kullanımı - Singleton üzerinden)
+        // new Texture(...) yerine ResourceManager kullanıyoruz.
+        charTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_CHAR);
+        platformTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_PLATFORM);
 
-        // Karakteri ve Platformları oluştur
+        // 3. Oyun Nesnelerini Oluştur
         player = new Player(50, 50, 32, 32);
 
         platforms = new Array<>();
-        // 1. Zemin (Geniş bir platform)
+        // Zemin Platformu
         platforms.add(new Platform(0, 0, WORLD_WIDTH, 30));
-        // 2. Ortadaki platform
+        // Havadaki Platform
         platforms.add(new Platform(300, 150, 200, 30));
+
+        inputHandler = new InputHandler();
+
+        enemies = new Array<>();
+
+        // Fabrikadan düşman sipariş ediyoruz:
+        // 1. Devriye Gezen Düşman (Platformun üzerinde)
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 350, 180));
+
+        // 2. Kovalayan Düşman (Zeminde)
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 600, 30));
     }
 
-    // --- Girdi İşleme ---
+    // --- Girdi Kontrolü (Şimdilik burada, sonra Command Pattern ile ayrılacak) ---
     private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            player.moveX(-1);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            player.moveX(1);
-        } else {
-            player.stopX();
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            player.jump();
-        }
+        inputHandler.handleInput(player);
+        //Command Pattern
     }
 
-    // --- Çarpışma Tespiti ve Yanıtı ---
+    // --- Çarpışma Mantığı ---
     private void checkCollisions() {
-        player.setOnGround(false); // Her güncellemede yere değmediğini varsay
+        player.setOnGround(false); // Her karede önce havada varsayıyoruz
 
         for (Platform platform : platforms) {
             if (Intersector.overlaps(player.getBounds(), platform.getBounds())) {
-
-                // Çarpışma sadece dikeyde mi gerçekleşti?
                 Rectangle intersection = new Rectangle();
                 Intersector.intersectRectangles(player.getBounds(), platform.getBounds(), intersection);
 
-                // Yukarıdan çarpma (Karakterin altı platformun üstüne çarpıyor)
+                // Eğer çarpışma dikeyde ve karakter aşağı düşüyorsa (platforma konuyorsa)
                 if (intersection.width > intersection.height && player.getVelocity().y < 0) {
-                    player.getBounds().y += platform.getBounds().y + platform.getBounds().height - player.getBounds().y; // Tam platformun üstüne hizala
+                    // Karakteri platformun tam üstüne hizala
+                    player.getBounds().y = platform.getBounds().y + platform.getBounds().height;
+
+                    // Düşme hızını sıfırla
                     player.getVelocity().y = 0;
+
+                    // Yerde olduğunu işaretle
                     player.setOnGround(true);
                 }
-                // Yanlardan çarpma mantığı buraya eklenebilir. (Basitlik için atlandı)
             }
         }
     }
 
-    // --- Oyun Döngüsü: Güncelleme (Update) ---
     @Override
     public void render(float delta) {
-        // Girdi ve Fizik
+        // 1. Mantıksal Güncellemeler
         handleInput();
-
-        // Karakteri hareket ettir (Yerçekimi dahil)
         player.update(delta);
-
-        // Çarpışmaları kontrol et ve pozisyonu düzelt
         checkCollisions();
 
-        // Ekranı temizle
-        ScreenUtils.clear(0.3f, 0.3f, 0.5f, 1); // Mavi tonlu arka plan
+        for (Enemy enemy : enemies) {
+            enemy.update(delta, player);
+        }
 
-        // Kamerayı güncelle
+        // 2. Ekranı Temizle (Siyah yerine lacivert bir ton)
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // 3. Kamerayı Güncelle
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
-        // Çizim
+        // 4. Çizime Başla
         batch.begin();
 
         // Platformları Çiz
         for (Platform platform : platforms) {
-            batch.draw(platformTexture, platform.getBounds().x, platform.getBounds().y, platform.getBounds().width, platform.getBounds().height);
+            batch.draw(platformTexture,
+                platform.getBounds().x, platform.getBounds().y,
+                platform.getBounds().width, platform.getBounds().height);
         }
 
         // Karakteri Çiz
-        batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
+        batch.draw(charTexture,
+            player.getBounds().x, player.getBounds().y,
+            player.getBounds().width, player.getBounds().height);
+
+        //düşmanları çiz
+        for (Enemy enemy : enemies) {
+            enemy.draw(batch);
+        }
 
         batch.end();
     }
 
-    // Diğer Screen Metotları (Şimdilik boş bırakılabilir)
-    @Override public void show() {}
-    @Override public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
-    @Override public void dispose() {
+    @Override
+    public void resize(int width, int height) {
+        // Ekran boyutu değişirse kamera ayarları güncellenebilir
+    }
+
+    @Override
+    public void show() {
+        // Ekran ilk açıldığında çalışır
+    }
+
+    @Override
+    public void pause() {
+        // Oyun arka plana atıldığında (Mobilde önemli)
+    }
+
+    @Override
+    public void resume() {
+        // Oyun tekrar açıldığında
+    }
+
+    @Override
+    public void hide() {
+        // Ekran kapandığında
+    }
+
+    @Override
+    public void dispose() {
+        // Sadece bu sınıfa özel kaynakları temizle
         batch.dispose();
-        charTexture.dispose();
-        platformTexture.dispose();
+
+        // DİKKAT: texture'ları burada dispose etmiyoruz!
+        // Onlar ResourceManager tarafından yönetiliyor ve MainGame kapanırken temizlenecek.
     }
 }

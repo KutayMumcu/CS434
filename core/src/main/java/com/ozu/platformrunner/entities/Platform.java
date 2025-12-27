@@ -1,4 +1,4 @@
-package com.ozu.platformrunner;
+package com.ozu.platformrunner.entities;
 
 // Platform.java
 import com.badlogic.gdx.math.Rectangle;
