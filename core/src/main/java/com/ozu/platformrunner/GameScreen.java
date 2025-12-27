@@ -18,9 +18,14 @@ import com.badlogic.gdx.utils.Array;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.InputHandler;
+import com.ozu.platformrunner.managers.PoolManager;
 import com.ozu.platformrunner.managers.ResourceManager;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory;
+import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
+import com.ozu.platformrunner.patterns.strategy.BowStrategy;
+import com.ozu.platformrunner.entities.Bullet; // Mermiyi import et
+import com.ozu.platformrunner.managers.HUD;
 
 public class GameScreen implements Screen {
 
@@ -38,10 +43,13 @@ public class GameScreen implements Screen {
     private final Texture platformTexture;
 
     private final Array<Enemy> enemies;
+    private final Array<Bullet> bullets;
 
     // Sabitler (Bunları ileride Constants sınıfına taşıyacağız)
     private static final float WORLD_WIDTH = 800;
     private static final float WORLD_HEIGHT = 480;
+
+    private final HUD hud;
 
     public GameScreen() {
         // 1. Kamera ve Çizim Aracı Hazırlığı
@@ -73,12 +81,38 @@ public class GameScreen implements Screen {
 
         // 2. Kovalayan Düşman (Zeminde)
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 600, 30));
+
+        bullets = new Array<>();
+
+        hud = new HUD();
+        player.addObserver(hud);
     }
 
-    // --- Girdi Kontrolü (Şimdilik burada, sonra Command Pattern ile ayrılacak) ---
     private void handleInput() {
+        // Hareket kodları (inputHandler.handleInput) burada duruyor...
         inputHandler.handleInput(player);
-        //Command Pattern
+
+        // --- YENİ: SALDIRI VE SİLAH DEĞİŞİMİ ---
+
+        // 'Z' tuşu saldırı olsun
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
+            player.performAttack(enemies, bullets);
+        }
+
+        // '1' tuşu Kılıç
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            player.equipWeapon(new SwordStrategy());
+        }
+
+        // '2' tuşu Yay
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            player.equipWeapon(new BowStrategy());
+        }
+
+        // TEST: Kendine zarar ver (Observer'ı denemek için)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
+            player.takeDamage(10);
+        }
     }
 
     // --- Çarpışma Mantığı ---
@@ -116,6 +150,24 @@ public class GameScreen implements Screen {
             enemy.update(delta, player);
         }
 
+        // MERMİ GÜNCELLEME VE TEMİZLİK DÖNGÜSÜ
+        // LibGDX Array kullanırken silme işlemi yapacaksak tersten döngü kurmak güvenlidir
+        // veya Iterator kullanmak gerekir. Basit olsun diye tersten dönelim.
+        for (int i = bullets.size - 1; i >= 0; i--) {
+            Bullet b = bullets.get(i);
+            b.update(delta);
+
+            if (!b.active) {
+                // 1. Listeden çıkar
+                bullets.removeIndex(i);
+
+                // 2. Havuza iade et (Geri Dönüşüm)
+                PoolManager.getInstance().bulletPool.free(b);
+
+                System.out.println("Mermi havuza iade edildi.");
+            }
+        }
+
         // 2. Ekranı Temizle (Siyah yerine lacivert bir ton)
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -143,6 +195,14 @@ public class GameScreen implements Screen {
         for (Enemy enemy : enemies) {
             enemy.draw(batch);
         }
+
+        //mermileri çiz
+        for (Bullet b : bullets) {
+            if (b.active) b.draw(batch);
+        }
+
+        //hud çiz
+        hud.render(batch);
 
         batch.end();
     }
