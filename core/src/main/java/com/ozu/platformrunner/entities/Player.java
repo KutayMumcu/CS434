@@ -36,6 +36,14 @@ public class Player {
 
     private int facingDirection = 1; // 1: Sağ, -1: Sol
 
+    // Hurt animation
+    private boolean isHurt = false;
+    private float hurtTimer = 0f;
+    private static final float HURT_DURATION = 0.5f;
+    private Vector2 knockbackVelocity = new Vector2(0, 0);
+    private float invulnerabilityTimer = 0f;
+    private static final float INVULNERABILITY_DURATION = 1.0f;
+
     public Player(float x, float y, float width, float height) {
         bounds = new Rectangle(x, y, width, height);
         velocity = new Vector2(0, 0);
@@ -50,6 +58,31 @@ public class Player {
 
     public void update(float delta) {
         currentState.update(this, delta);
+
+        // Update hurt state
+        if (isHurt) {
+            hurtTimer += delta;
+            if (hurtTimer >= HURT_DURATION) {
+                isHurt = false;
+                hurtTimer = 0f;
+            }
+        }
+
+        // Update invulnerability
+        if (invulnerabilityTimer > 0) {
+            invulnerabilityTimer -= delta;
+        }
+
+        // Apply knockback if hurt
+        if (knockbackVelocity.len() > 0) {
+            bounds.x += knockbackVelocity.x * delta;
+            bounds.y += knockbackVelocity.y * delta;
+            // Gradually reduce knockback
+            knockbackVelocity.scl(0.9f);
+            if (knockbackVelocity.len() < 10f) {
+                knockbackVelocity.set(0, 0);
+            }
+        }
 
         // Fizik Uygula
         if (!onGround) {
@@ -100,10 +133,32 @@ public class Player {
     public void addObserver(GameObserver observer) { observers.add(observer); }
 
     public void takeDamage(int amount) {
-        this.health -= amount;
-        if (this.health < 0) this.health = 0;
-        notifyObservers(GameEvent.HEALTH_CHANGED);
-        if (this.health == 0) notifyObservers(GameEvent.PLAYER_DIED);
+        // Only take damage if not invulnerable
+        if (invulnerabilityTimer <= 0) {
+            this.health -= amount;
+            if (this.health < 0) this.health = 0;
+            notifyObservers(GameEvent.HEALTH_CHANGED);
+            if (this.health == 0) {
+                notifyObservers(GameEvent.PLAYER_DIED);
+            } else {
+                // Trigger hurt animation
+                isHurt = true;
+                hurtTimer = 0f;
+                invulnerabilityTimer = INVULNERABILITY_DURATION;
+            }
+        }
+    }
+
+    public void applyKnockback(float directionX, float force) {
+        knockbackVelocity.set(directionX * force, 100f);
+    }
+
+    public boolean isInvulnerable() {
+        return invulnerabilityTimer > 0;
+    }
+
+    public boolean isHurt() {
+        return isHurt;
     }
 
     public void setHealth(int health) {

@@ -46,16 +46,11 @@ public class SwordSlash {
         // Calculate alpha based on time (fade out)
         float alpha = 1.0f - (elapsedTime / duration);
 
-        // Draw as a white arc/slash
+        // Draw as a white slash effect
         batch.setColor(1, 1, 1, alpha);
 
-        if (direction > 0) {
-            // Slash to the right - draw angled rectangle
-            batch.draw(slashTexture, x, y, 0, height/2, width, height, 1, 1, -30);
-        } else {
-            // Slash to the left
-            batch.draw(slashTexture, x, y, width, height/2, width, height, 1, 1, 30);
-        }
+        // Simple rectangular slash
+        batch.draw(slashTexture, x, y, width, height);
 
         // Reset color
         batch.setColor(Color.WHITE);

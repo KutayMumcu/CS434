@@ -23,6 +23,7 @@ import com.ozu.platformrunner.entities.Bullet;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
+import com.ozu.platformrunner.entities.SwordSlash;
 import com.ozu.platformrunner.managers.*;
 import com.ozu.platformrunner.patterns.decorator.DoubleShotDecorator;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
@@ -41,6 +42,7 @@ public class GameScreen implements Screen {
     private final Array<Platform> platforms;
     private final Array<Enemy> enemies;
     private final Array<Bullet> bullets;
+    private final Array<SwordSlash> swordSlashes;
 
     private final InputHandler inputHandler;
     private final SaveManager saveManager;
@@ -71,6 +73,7 @@ public class GameScreen implements Screen {
         platforms = new Array<>();
         enemies = new Array<>();
         bullets = new Array<>();
+        swordSlashes = new Array<>();
 
         // InputHandler'ı başlatıyoruz
         inputHandler = new InputHandler();
@@ -123,6 +126,13 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
             player.performAttack(enemies, bullets);
+
+            // Add sword slash animation if using sword
+            if (player.getAttackStrategy().getClass().getSimpleName().contains("Sword")) {
+                float slashX = player.getBounds().x + (player.getFacingDirection() > 0 ? player.getBounds().width : -40);
+                float slashY = player.getBounds().y + 5;
+                swordSlashes.add(new SwordSlash(slashX, slashY, player.getFacingDirection()));
+            }
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) player.equipWeapon(new SwordStrategy());
@@ -134,34 +144,37 @@ public class GameScreen implements Screen {
     }
 
     private void checkCollisions() {
-        // Varsayılan olarak havada kabul et
         player.setOnGround(false);
 
         for (Platform platform : platforms) {
-            // 1. NORMAL ÇARPIŞMA (İç içe geçmeyi önle)
             if (Intersector.overlaps(player.getBounds(), platform.getBounds())) {
                 Rectangle intersection = new Rectangle();
                 Intersector.intersectRectangles(player.getBounds(), platform.getBounds(), intersection);
 
-                // Yukarıdan düşerken platformun içine girdiyse yukarı taşı
-                if (intersection.width > intersection.height && player.getVelocity().y <= 0) {
-                    player.getBounds().y = platform.getBounds().y + platform.getBounds().height;
-                    player.getVelocity().y = 0;
+                // Determine which side we're colliding from
+                if (intersection.height < intersection.width) {
+                    // Vertical collision (top or bottom)
+                    if (player.getVelocity().y < 0) {
+                        // Falling down, hit top of platform
+                        player.getBounds().y = platform.getBounds().y + platform.getBounds().height;
+                        player.getVelocity().y = 0;
+                        player.setOnGround(true);
+                    } else if (player.getVelocity().y > 0) {
+                        // Jumping up, hit bottom of platform
+                        player.getBounds().y = platform.getBounds().y - player.getBounds().height;
+                        player.getVelocity().y = 0;
+                    }
+                } else {
+                    // Horizontal collision (left or right)
+                    if (player.getVelocity().x > 0) {
+                        // Moving right, hit left side of platform
+                        player.getBounds().x = platform.getBounds().x - player.getBounds().width;
+                    } else if (player.getVelocity().x < 0) {
+                        // Moving left, hit right side of platform
+                        player.getBounds().x = platform.getBounds().x + platform.getBounds().width;
+                    }
+                    player.getVelocity().x = 0;
                 }
-            }
-
-            // 2. "AYAK" SENSÖRÜ (Zıplama için yere basma kontrolü)
-            // Karakterin 2 piksel altını kontrol eden sanal bir kutu
-            Rectangle footSensor = new Rectangle(
-                player.getBounds().x + 2,       // Biraz içeriden başla (kenarlara takılmasın)
-                player.getBounds().y - 2,       // Karakterin 2 piksel altı
-                player.getBounds().width - 4,   // Genişlik
-                2                               // Yükseklik
-            );
-
-            // Eğer bu sensör platforma değiyorsa VE hızımız yukarı doğru değilse -> YERDEYİZ
-            if (Intersector.overlaps(footSensor, platform.getBounds()) && player.getVelocity().y <= 0) {
-                player.setOnGround(true);
             }
         }
     }
@@ -241,6 +254,26 @@ public class GameScreen implements Screen {
             if (e.isDead()) enemies.removeIndex(i);
         }
 
+        // Update sword slashes
+        for (int i = swordSlashes.size - 1; i >= 0; i--) {
+            SwordSlash slash = swordSlashes.get(i);
+            slash.update(delta);
+            if (slash.isFinished()) {
+                swordSlashes.removeIndex(i);
+            }
+        }
+
+        // Enemy collision with player (damage player)
+        for (Enemy enemy : enemies) {
+            if (Intersector.overlaps(player.getBounds(), enemy.getBounds()) && !player.isInvulnerable()) {
+                player.takeDamage(5);
+
+                // Apply smooth knockback
+                float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
+                player.applyKnockback(knockbackDirection, 300f);
+            }
+        }
+
         // Kamera güncelleme
         float camX = player.getBounds().x;
         if (camX < 400) camX = 400;
@@ -254,10 +287,19 @@ public class GameScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
-        for (Platform p : platforms) batch.draw(platformTexture, p.getBounds().x, p.getBounds().y, p.getBounds().width, p.getBounds().height);
+        // Draw platforms using their own draw method
+        for (Platform p : platforms) {
+            p.draw(batch);
+        }
+        // Draw player with hurt flash effect
+        if (player.isHurt() && ((int)(elapsedTime * 20) % 2 == 0)) {
+            batch.setColor(1, 0.3f, 0.3f, 1); // Red tint when hurt
+        }
         batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
+        batch.setColor(Color.WHITE);
         for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) if (b.active) b.draw(batch);
+        for (SwordSlash slash : swordSlashes) slash.draw(batch);
         batch.end();
 
         // --- DÜZELTME 4: UI ÇİZİMİ ---
