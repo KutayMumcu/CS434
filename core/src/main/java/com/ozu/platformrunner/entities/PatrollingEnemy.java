@@ -19,13 +19,28 @@ public class PatrollingEnemy extends Enemy {
 
         // AGRESIF MOD: Oyuncu yakınsa kovala
         if (distanceToPlayer < aggroRange) {
-            if (player.getBounds().x > bounds.x) {
-                velocity.x = speed * 1.5f; // Kovalama modunda daha hızlı
+            int chaseDirection = (player.getBounds().x > bounds.x) ? 1 : -1;
+
+            // Check for edge before chasing
+            if (isEdgeAhead(chaseDirection, getPlatforms())) {
+                // Edge ahead! Stop moving to avoid falling
+                velocity.x = 0;
             } else {
-                velocity.x = -speed * 1.5f;
+                // Safe to chase
+                velocity.x = speed * 1.5f * chaseDirection;
+            }
+
+            // Jump when chasing if player is above
+            if (shouldJumpToPlayer(player, 200f, 30f)) {
+                jump();
             }
         } else {
-            // Normal devriye
+            // Normal devriye - check for edges
+            if (isEdgeAhead(direction, getPlatforms())) {
+                // Edge ahead! Turn around
+                direction *= -1;
+            }
+
             velocity.x = speed * direction;
 
             // Sınırlara geldiyse yön değiştir

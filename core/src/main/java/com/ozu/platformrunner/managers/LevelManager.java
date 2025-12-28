@@ -12,8 +12,7 @@ public class LevelManager {
         platforms.clear();
         enemies.clear();
 
-        // Varsayılan Zemin (Her seviyede olsun)
-        platforms.add(new Platform(0, 0, 2000, 30));
+        // NO DEFAULT GROUND - Each level now has segmented ground with deadly holes!
 
         switch (levelId) {
             case 1:
@@ -44,7 +43,15 @@ public class LevelManager {
     }
 
     private static void setupLevel1(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Kolay Seviye
+        // Easy Level - Wide ground segments with small gaps
+        // Ground platforms with gaps
+        platforms.add(new Platform(0, 0, 300, 30));      // Starting platform
+        platforms.add(new Platform(380, 0, 250, 30));    // Gap: 80 units
+        platforms.add(new Platform(710, 0, 300, 30));    // Gap: 80 units
+        platforms.add(new Platform(1090, 0, 400, 30));   // Gap: 80 units
+        platforms.add(new Platform(1570, 0, 430, 30));   // Gap: 80 units - extends to end
+
+        // Elevated platforms
         platforms.add(new Platform(300, 150, 200, 30));
         platforms.add(new Platform(600, 250, 200, 30));
 
@@ -52,7 +59,15 @@ public class LevelManager {
     }
 
     private static void setupLevel2(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Orta Seviye
+        // Medium Level - Moderate gaps, requires careful jumping
+        // Ground platforms with larger gaps
+        platforms.add(new Platform(0, 0, 280, 30));      // Starting platform
+        platforms.add(new Platform(400, 0, 220, 30));    // Gap: 120 units
+        platforms.add(new Platform(740, 0, 280, 30));    // Gap: 120 units
+        platforms.add(new Platform(1140, 0, 300, 30));   // Gap: 120 units
+        platforms.add(new Platform(1560, 0, 440, 30));   // Gap: 120 units
+
+        // Elevated platforms
         platforms.add(new Platform(200, 120, 150, 30));
         platforms.add(new Platform(450, 200, 150, 30));
         platforms.add(new Platform(700, 300, 150, 30));
@@ -62,20 +77,35 @@ public class LevelManager {
     }
 
     private static void setupLevel3(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Zor Seviye
+        // Hard Level - 1 Boss, wider gaps
+        // Ground platforms with challenging gaps
+        platforms.add(new Platform(0, 0, 250, 30));      // Starting platform
+        platforms.add(new Platform(410, 0, 200, 30));    // Gap: 160 units
+        platforms.add(new Platform(770, 0, 180, 30));    // Gap: 160 units
+        platforms.add(new Platform(1110, 0, 250, 30));   // Gap: 160 units
+        platforms.add(new Platform(1520, 0, 480, 30));   // Gap: 160 units
+
+        // Elevated platforms
         platforms.add(new Platform(150, 100, 100, 30));
         platforms.add(new Platform(350, 200, 100, 30));
         platforms.add(new Platform(550, 300, 100, 30));
         platforms.add(new Platform(750, 400, 100, 30));
 
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 600, 30));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 200, 30));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 600, 30));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 360, 230));
     }
 
     private static void setupLevel4(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Level 4: "Vertical Challenge" - Ascending platformer
-        // Focus on vertical movement and precision jumping
+        // Level 4: "Vertical Challenge" - Ascending platformer with 1 Boss
+        // Focus on vertical movement and precision jumping with deadly gaps
+
+        // Sparse ground - very dangerous to fall!
+        platforms.add(new Platform(0, 0, 200, 30));      // Starting platform
+        platforms.add(new Platform(420, 0, 180, 30));    // Gap: 220 units - WIDE!
+        platforms.add(new Platform(820, 0, 200, 30));    // Gap: 220 units
+        platforms.add(new Platform(1240, 0, 300, 30));   // Gap: 220 units
+        platforms.add(new Platform(1760, 0, 240, 30));   // Gap: 220 units
 
         // Ascending staircase pattern with increasing difficulty
         platforms.add(new Platform(100, 80, 150, 30));
@@ -88,14 +118,21 @@ public class LevelManager {
         platforms.add(new Platform(250, 240, 100, 30));
         platforms.add(new Platform(600, 170, 90, 30));
 
-        // Two patrolling enemies on mid-height platforms to add pressure
+        // Boss on high platform + one patrolling enemy
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 850, 410));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 520, 240));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 920, 410));
     }
 
     private static void setupLevel5(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Level 5: "Enemy Gauntlet" - Combat intensive
-        // Many enemies with moderate platform complexity
+        // Level 5: "Enemy Gauntlet" - Combat intensive with 2 Bosses
+        // Many enemies with moderate platform complexity + deadly pits
+
+        // Fragmented ground - combat arenas separated by death pits
+        platforms.add(new Platform(0, 0, 220, 30));      // Arena 1
+        platforms.add(new Platform(380, 0, 200, 30));    // Gap: 160 units
+        platforms.add(new Platform(740, 0, 220, 30));    // Gap: 160 units
+        platforms.add(new Platform(1120, 0, 250, 30));   // Gap: 160 units
+        platforms.add(new Platform(1530, 0, 470, 30));   // Gap: 160 units
 
         // Platform layout - creates combat arenas
         platforms.add(new Platform(200, 100, 180, 30));
@@ -104,17 +141,25 @@ public class LevelManager {
         platforms.add(new Platform(950, 200, 160, 30));
         platforms.add(new Platform(350, 280, 140, 30));
 
-        // Enemy gauntlet - 5 enemies (mix of types)
+        // 2 Bosses + 3 regular enemies
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 300, 30));
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 950, 230));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 150, 30));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 220, 130));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 500, 30));
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 500, 210));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 720, 150));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 970, 230));
     }
 
     private static void setupLevel6(Array<Platform> platforms, Array<Enemy> enemies) {
-        // Level 6: "The Maze" - Complex navigation
-        // Many platforms creating maze-like structure with multiple paths
+        // Level 6: "The Maze" - Complex navigation with 3 Bosses
+        // Many platforms creating maze-like structure with deadly drops everywhere!
+
+        // Very fragmented ground - extreme danger!
+        platforms.add(new Platform(0, 0, 180, 30));      // Starting
+        platforms.add(new Platform(340, 0, 160, 30));    // Gap: 160 units
+        platforms.add(new Platform(660, 0, 150, 30));    // Gap: 160 units
+        platforms.add(new Platform(970, 0, 180, 30));    // Gap: 160 units
+        platforms.add(new Platform(1310, 0, 200, 30));   // Gap: 160 units
+        platforms.add(new Platform(1670, 0, 330, 30));   // Gap: 160 units
 
         // Lower maze section
         platforms.add(new Platform(150, 80, 120, 30));
@@ -137,16 +182,25 @@ public class LevelManager {
         platforms.add(new Platform(270, 340, 120, 30));
         platforms.add(new Platform(600, 340, 120, 30));
 
-        // Strategically placed enemies in choke points
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 270, 190));
+        // 3 Bosses strategically placed + 2 regular enemies
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 270, 190));
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 370, 280));
+        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.BOSS, 620, 370));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 200, 280));
         enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.PATROLLING, 540, 280));
-        enemies.add(EnemyFactory.createEnemy(EnemyFactory.EnemyType.CHASING, 290, 370));
     }
 
     private static void setupLevel7(Array<Platform> platforms, Array<Enemy> enemies) {
         // Level 7: "Final Showdown" - Ultimate challenge
-        // Complex platforming + many aggressive enemies
+        // Complex platforming + many aggressive enemies + MAXIMUM DANGER GAPS!
+
+        // NIGHTMARE GROUND - Extremely fragmented with huge gaps!
+        platforms.add(new Platform(0, 0, 150, 30));      // Starting - very small!
+        platforms.add(new Platform(400, 0, 140, 30));    // Gap: 250 units - HUGE!
+        platforms.add(new Platform(790, 0, 130, 30));    // Gap: 250 units - HUGE!
+        platforms.add(new Platform(1170, 0, 150, 30));   // Gap: 250 units - HUGE!
+        platforms.add(new Platform(1570, 0, 200, 30));   // Gap: 250 units - HUGE!
+        platforms.add(new Platform(1920, 0, 80, 30));    // Gap: 150 units - Final tiny platform!
 
         // Complex platform layout with difficult jumps
         platforms.add(new Platform(120, 90, 100, 30));

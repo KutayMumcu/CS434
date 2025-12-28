@@ -44,6 +44,10 @@ public class Player {
     private float invulnerabilityTimer = 0f;
     private static final float INVULNERABILITY_DURATION = 1.0f;
 
+    // Attack Cooldown System
+    private float attackCooldown = 0.5f;
+    private float attackCooldownTimer = 0f;
+
     public Player(float x, float y, float width, float height) {
         bounds = new Rectangle(x, y, width, height);
         velocity = new Vector2(0, 0);
@@ -71,6 +75,11 @@ public class Player {
         // Update invulnerability
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= delta;
+        }
+
+        // Update attack cooldown
+        if (attackCooldownTimer > 0) {
+            attackCooldownTimer -= delta;
         }
 
         // Apply knockback if hurt
@@ -111,7 +120,11 @@ public class Player {
     }
 
     public void performAttack(Array<Enemy> enemies, Array<Bullet> bullets) {
-        attackStrategy.attack(this, enemies, bullets);
+        // Only attack if cooldown is ready
+        if (attackCooldownTimer <= 0) {
+            attackStrategy.attack(this, enemies, bullets);
+            attackCooldownTimer = attackCooldown;
+        }
     }
 
     public void equipWeapon(AttackStrategy newStrategy) {
@@ -200,4 +213,13 @@ public class Player {
     public void setOnGround(boolean onGround) { this.onGround = onGround; }
     public int getHealth() { return health; }
     public AttackStrategy getAttackStrategy() { return attackStrategy; }
+
+    // Attack Cooldown Getters
+    public float getAttackCooldownPercent() {
+        return Math.max(0, attackCooldownTimer / attackCooldown);
+    }
+
+    public boolean isAttackOnCooldown() {
+        return attackCooldownTimer > 0;
+    }
 }

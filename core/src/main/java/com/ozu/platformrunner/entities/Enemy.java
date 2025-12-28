@@ -19,6 +19,11 @@ public abstract class Enemy {
     protected Vector2 velocity;
     protected boolean onGround = false;
     protected static final float GRAVITY = -800f;
+    protected static final float JUMP_VELOCITY = 400f;
+
+    // YENİ: Jump System
+    protected float jumpCooldown = 1.0f;
+    protected float jumpCooldownTimer = 0f;
 
     // YENİ: Can Sistemi
     protected int maxHealth = 30;
@@ -45,15 +50,23 @@ public abstract class Enemy {
 
     // Platformları da parametre olarak alıyoruz ki düşmeyelim
     public void update(float delta, Player player, Array<Platform> platforms) {
-        // 1. Yerçekimi
+        // Store platforms for edge detection
+        this.currentPlatforms = platforms;
+
+        // 1. Update jump cooldown
+        if (jumpCooldownTimer > 0) {
+            jumpCooldownTimer -= delta;
+        }
+
+        // 2. Yerçekimi
         if (!onGround) {
             velocity.y += GRAVITY * delta;
         }
 
-        // 2. Alt Sınıfın Hareket Mantığı (Abstract metodu çağır)
+        // 3. Alt Sınıfın Hareket Mantığı (Abstract metodu çağır)
         moveBehavior(delta, player);
 
-        // 3. Pozisyon Güncelleme
+        // 4. Pozisyon Güncelleme
         bounds.x += velocity.x * delta;
         bounds.y += velocity.y * delta;
 
@@ -76,10 +89,67 @@ public abstract class Enemy {
             velocity.y = 0;
             onGround = true;
         }
+
+        // Death by falling into pit (same as player)
+        if (bounds.y < -50) {
+            currentHealth = 0; // Enemy dies from falling
+        }
     }
 
     // Her düşman nasıl yürüyeceğine kendi karar verir
     protected abstract void moveBehavior(float delta, Player player);
+
+    // Jump method that can be called by subclasses
+    protected void jump() {
+        if (onGround && jumpCooldownTimer <= 0) {
+            velocity.y = JUMP_VELOCITY;
+            onGround = false;
+            jumpCooldownTimer = jumpCooldown;
+        }
+    }
+
+    // Helper method to check if player is above and nearby
+    protected boolean shouldJumpToPlayer(Player player, float horizontalRange, float verticalThreshold) {
+        float horizontalDistance = Math.abs(player.getBounds().x - bounds.x);
+        float verticalDistance = player.getBounds().y - bounds.y;
+
+        return horizontalDistance < horizontalRange &&
+               verticalDistance > verticalThreshold &&
+               verticalDistance < 200f &&
+               onGround &&
+               jumpCooldownTimer <= 0;
+    }
+
+    // Edge detection - checks if there's ground ahead in the direction of movement
+    protected boolean isEdgeAhead(int direction, Array<Platform> platforms) {
+        if (!onGround) return false; // Only check edges when on ground
+
+        // Check point slightly ahead and below the enemy
+        float checkDistance = bounds.width * 0.6f; // Check a bit ahead
+        float checkX = bounds.x + (direction > 0 ? bounds.width + checkDistance : -checkDistance);
+        float checkY = bounds.y - 10f; // Check slightly below current position
+
+        // Check if there's a platform at this position
+        for (Platform platform : platforms) {
+            Rectangle platformBounds = platform.getBounds();
+            // Check if the check point is above and within the platform
+            if (checkX >= platformBounds.x &&
+                checkX <= platformBounds.x + platformBounds.width &&
+                checkY >= platformBounds.y - 20 &&
+                checkY <= platformBounds.y + platformBounds.height) {
+                return false; // Ground exists, no edge
+            }
+        }
+
+        return true; // Edge detected! No ground ahead
+    }
+
+    // Helper method to get platforms from update method
+    private Array<Platform> currentPlatforms;
+
+    protected Array<Platform> getPlatforms() {
+        return currentPlatforms;
+    }
 
     // Hasar Alma
     public void takeDamage(int amount) {

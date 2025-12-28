@@ -20,6 +20,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import com.ozu.platformrunner.entities.Arrow;
+import com.ozu.platformrunner.entities.BossEnemy;
 import com.ozu.platformrunner.entities.Bullet;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.entities.Platform;
@@ -47,6 +49,7 @@ public class GameScreen implements Screen {
     private final Array<Platform> platforms;
     private final Array<Enemy> enemies;
     private final Array<Bullet> bullets;
+    private final Array<Arrow> arrows;
     private final Array<SwordSlash> swordSlashes;
 
     private final InputHandler inputHandler;
@@ -82,6 +85,7 @@ public class GameScreen implements Screen {
         platforms = new Array<>();
         enemies = new Array<>();
         bullets = new Array<>();
+        arrows = new Array<>();
         swordSlashes = new Array<>();
 
         // InputHandler'ı başlatıyoruz
@@ -299,9 +303,33 @@ public class GameScreen implements Screen {
             }
         }
 
+        // Update arrows
+        for (int i = arrows.size - 1; i >= 0; i--) {
+            Arrow a = arrows.get(i);
+            a.update(delta);
+
+            // Arrow hits player
+            if (a.active && Intersector.overlaps(a.getBounds(), player.getBounds())) {
+                player.takeDamage(15); // Increased from 8 to 15
+                float knockbackDir = (player.getBounds().x < a.getBounds().x) ? -1 : 1;
+                player.applyKnockback(knockbackDir, 250f);
+                a.deactivate();
+            }
+
+            // Remove inactive arrows
+            if (!a.active) {
+                arrows.removeIndex(i);
+                PoolManager.getInstance().arrowPool.free(a);
+            }
+        }
+
         for (int i = enemies.size - 1; i >= 0; i--) {
             Enemy e = enemies.get(i);
-            e.update(delta, player, platforms);
+            if (e instanceof BossEnemy) {
+                ((BossEnemy) e).updateAndShoot(delta, player, platforms, arrows);
+            } else {
+                e.update(delta, player, platforms);
+            }
             if (e.isDead()) enemies.removeIndex(i);
         }
 
@@ -317,7 +345,7 @@ public class GameScreen implements Screen {
         // Enemy collision with player (damage player)
         for (Enemy enemy : enemies) {
             if (Intersector.overlaps(player.getBounds(), enemy.getBounds())) {
-                player.takeDamage(5);
+                player.takeDamage(12); // Increased from 5 to 12
 
                 // Apply smooth knockback
                 float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
@@ -348,8 +376,24 @@ public class GameScreen implements Screen {
         }
         batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
         batch.setColor(Color.WHITE);
+
+        // Draw attack cooldown overlay
+        if (player.isAttackOnCooldown()) {
+            float cooldownPercent = player.getAttackCooldownPercent();
+            float overlayHeight = player.getBounds().height * cooldownPercent;
+
+            batch.setColor(0.2f, 0.2f, 0.2f, 0.5f);
+            batch.draw(platformTexture,
+                player.getBounds().x,
+                player.getBounds().y,
+                player.getBounds().width,
+                overlayHeight);
+            batch.setColor(Color.WHITE);
+        }
+
         for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) if (b.active) b.draw(batch);
+        for (Arrow a : arrows) if (a.active) a.draw(batch);
         for (SwordSlash slash : swordSlashes) slash.draw(batch);
         batch.end();
 
