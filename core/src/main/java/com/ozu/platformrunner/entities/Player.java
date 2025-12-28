@@ -193,6 +193,7 @@ public class Player {
 
     // Getter
     public int getFacingDirection() { return facingDirection; }
+    public void setFacingDirection(int direction) { this.facingDirection = direction; }
     public Rectangle getBounds() { return bounds; }
     public Vector2 getVelocity() { return velocity; }
     public boolean isOnGround() { return onGround; }

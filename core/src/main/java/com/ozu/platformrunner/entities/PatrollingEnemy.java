@@ -36,4 +36,10 @@ public class PatrollingEnemy extends Enemy {
             }
         }
     }
+
+    // Getters/setters for save/load
+    public float getStartX() { return startX; }
+    public void setStartX(float startX) { this.startX = startX; }
+    public int getDirection() { return direction; }
+    public void setDirection(int direction) { this.direction = direction; }
 }

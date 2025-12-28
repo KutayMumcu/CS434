@@ -2,9 +2,12 @@ package com.ozu.platformrunner.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
-import com.ozu.platformrunner.entities.Player;
-import com.ozu.platformrunner.patterns.memento.GameStateMemento;
+import com.ozu.platformrunner.entities.*;
+import com.ozu.platformrunner.patterns.factory.EnemyFactory;
+import com.ozu.platformrunner.patterns.factory.EnemyFactory.EnemyType;
+import com.ozu.platformrunner.patterns.memento.*;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
 
@@ -16,61 +19,168 @@ public class SaveManager {
         json = new Json();
     }
 
-    // KAYDETME (SAVE)
-    public void saveGame(Player player) {
-        // 1. Memento nesnesini oluştur ve verileri doldur
+    // YENİ: TAM oyun durumu yakalama
+    public GameStateMemento createMemento(Player player, Array<Enemy> enemies,
+                                           Array<Bullet> bullets, Array<Platform> platforms) {
         GameStateMemento memento = new GameStateMemento();
 
+        // Player temel veriler
         memento.playerX = player.getBounds().x;
         memento.playerY = player.getBounds().y;
         memento.playerHealth = player.getHealth();
 
-        // GameManager'dan gelen veriler
+        // Player tam durum
+        memento.playerVelocityX = player.getVelocity().x;
+        memento.playerVelocityY = player.getVelocity().y;
+        memento.playerFacingDirection = player.getFacingDirection();
+        memento.playerOnGround = player.isOnGround();
+
+        // Oyun durumu
         memento.score = GameManager.getInstance().getScore();
         memento.level = GameManager.getInstance().getCurrentLevel();
 
-        // Silah bilgisini dinamik al
+        // Silah
         if (player.getAttackStrategy() instanceof BowStrategy) {
             memento.currentWeapon = "BOW";
         } else {
             memento.currentWeapon = "SWORD";
         }
 
-        // 2. JSON olarak dosyaya yaz
+        // Düşmanlar
+        for (Enemy e : enemies) {
+            EnemyData data = new EnemyData();
+            data.type = e.getClass().getSimpleName();
+            data.x = e.getBounds().x;
+            data.y = e.getBounds().y;
+            data.currentHealth = e.getCurrentHealth();
+            data.velocityX = e.getVelocity().x;
+            data.velocityY = e.getVelocity().y;
+
+            // PatrollingEnemy özel verileri
+            if (e instanceof PatrollingEnemy) {
+                PatrollingEnemy pe = (PatrollingEnemy) e;
+                data.startX = pe.getStartX();
+                data.direction = pe.getDirection();
+            }
+
+            memento.enemies.add(data);
+        }
+
+        // Mermiler
+        for (Bullet b : bullets) {
+            BulletData data = new BulletData();
+            data.x = b.getBounds().x;
+            data.y = b.getBounds().y;
+            data.direction = b.getDirection();
+            data.active = b.active;
+            memento.bullets.add(data);
+        }
+
+        // Platformlar
+        for (Platform p : platforms) {
+            PlatformData data = new PlatformData();
+            data.x = p.getBounds().x;
+            data.y = p.getBounds().y;
+            data.width = p.getBounds().width;
+            data.height = p.getBounds().height;
+            memento.platforms.add(data);
+        }
+
+        return memento;
+    }
+
+    // Memento'yu dosyaya yaz
+    public void saveMemento(GameStateMemento memento) {
         FileHandle file = Gdx.files.local(SAVE_FILE);
         file.writeString(json.toJson(memento), false);
-
         System.out.println("Oyun Kaydedildi! Dosya: " + file.path());
     }
 
-    // YÜKLEME (LOAD)
-    public void loadGame(Player player) {
+    // Dosyadan memento yükle
+    public GameStateMemento loadMemento() {
         FileHandle file = Gdx.files.local(SAVE_FILE);
 
         if (!file.exists()) {
             System.out.println("Kayıt dosyası bulunamadı!");
-            return;
+            return null;
         }
 
-        // 1. Dosyadan oku ve Memento'ya çevir
         GameStateMemento memento = json.fromJson(GameStateMemento.class, file.readString());
+        System.out.println("Kayıt yüklendi!");
+        return memento;
+    }
 
-        // 2. Verileri oyuna geri yükle
+    // Memento'dan oyun durumunu geri yükle
+    public void applyMemento(GameStateMemento memento, Player player,
+                              Array<Enemy> enemies, Array<Bullet> bullets, Array<Platform> platforms) {
+        if (memento == null) return;
+
+        // Player geri yükle
         player.getBounds().setPosition(memento.playerX, memento.playerY);
-        // Canı yüklemek için (takeDamage yerine setHealth lazım veya hileyle):
-        // Player'a setHealth metodu ekleyeceğiz.
         player.setHealth(memento.playerHealth);
+        player.getVelocity().set(memento.playerVelocityX, memento.playerVelocityY);
+        player.setFacingDirection(memento.playerFacingDirection);
+        player.setOnGround(memento.playerOnGround);
 
-        GameManager.getInstance().resetGame(); // Önce sıfırla
-        GameManager.getInstance().addScore(memento.score);
-        // Level set etme metodu GameManager'da olmalı
-
+        // Silah
         if ("BOW".equals(memento.currentWeapon)) {
             player.equipWeapon(new BowStrategy());
         } else {
             player.equipWeapon(new SwordStrategy());
         }
 
-        System.out.println("Oyun Yüklendi! Puan: " + memento.score);
+        // Oyun durumu
+        GameManager.getInstance().setLevel(memento.level);
+        GameManager.getInstance().resetGame();
+        GameManager.getInstance().addScore(memento.score);
+
+        // Düşmanları geri yükle
+        enemies.clear();
+        for (EnemyData data : memento.enemies) {
+            EnemyType type = data.type.equals("PatrollingEnemy") ? EnemyType.PATROLLING : EnemyType.CHASING;
+            Enemy enemy = EnemyFactory.createEnemy(type, data.x, data.y);
+            enemy.setHealth(data.currentHealth);
+            enemy.getVelocity().set(data.velocityX, data.velocityY);
+
+            // PatrollingEnemy özel verileri
+            if (enemy instanceof PatrollingEnemy) {
+                PatrollingEnemy pe = (PatrollingEnemy) enemy;
+                pe.setStartX(data.startX);
+                pe.setDirection(data.direction);
+            }
+
+            enemies.add(enemy);
+        }
+
+        // Mermileri geri yükle
+        bullets.clear();
+        for (BulletData data : memento.bullets) {
+            if (data.active) {
+                Bullet bullet = PoolManager.getInstance().bulletPool.obtain();
+                bullet.getBounds().setPosition(data.x, data.y);
+                bullet.setDirection(data.direction);
+                bullet.active = data.active;
+                bullets.add(bullet);
+            }
+        }
+
+        // Platformları geri yükle
+        platforms.clear();
+        for (PlatformData data : memento.platforms) {
+            platforms.add(new Platform(data.x, data.y, data.width, data.height));
+        }
+
+        System.out.println("Oyun durumu geri yüklendi! Puan: " + memento.score);
+    }
+
+    // ESKİ API (geriye dönük uyumluluk için - kullanmayın)
+    @Deprecated
+    public void saveGame(Player player) {
+        System.out.println("UYARI: saveGame() artık kullanılmıyor. createMemento() + saveMemento() kullanın.");
+    }
+
+    @Deprecated
+    public void loadGame(Player player) {
+        System.out.println("UYARI: loadGame() artık kullanılmıyor. loadMemento() + applyMemento() kullanın.");
     }
 }

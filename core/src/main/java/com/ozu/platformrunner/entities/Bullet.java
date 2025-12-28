@@ -56,4 +56,6 @@ public class Bullet implements Pool.Poolable {
     }
 
     public Rectangle getBounds() { return bounds; }
+    public int getDirection() { return direction; }
+    public void setDirection(int direction) { this.direction = direction; }
 }

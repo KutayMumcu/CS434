@@ -115,4 +115,7 @@ public abstract class Enemy {
     }
 
     public Rectangle getBounds() { return bounds; }
+    public int getCurrentHealth() { return currentHealth; }
+    public void setHealth(int health) { this.currentHealth = health; }
+    public Vector2 getVelocity() { return velocity; }
 }

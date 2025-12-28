@@ -2,6 +2,7 @@ package com.ozu.platformrunner;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -26,6 +27,10 @@ import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.entities.SwordSlash;
 import com.ozu.platformrunner.managers.*;
 import com.ozu.platformrunner.patterns.decorator.DoubleShotDecorator;
+import com.ozu.platformrunner.patterns.memento.GameStateMemento;
+import com.ozu.platformrunner.patterns.state.GameScreenState;
+import com.ozu.platformrunner.patterns.state.PausedState;
+import com.ozu.platformrunner.patterns.state.PlayingState;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
 
@@ -56,6 +61,10 @@ public class GameScreen implements Screen {
 
     private int currentLevelId;
     private float elapsedTime;
+
+    // YENİ: State Pattern için
+    private GameScreenState screenState;
+    private boolean isPaused = false;
 
     public GameScreen(MainGame game, int levelId) {
         this.mainGame = game;
@@ -116,8 +125,20 @@ public class GameScreen implements Screen {
         stage.addActor(menuBtn);
 
         // Girdi Yöneticisi: Hem UI (Stage) hem Oyun için
-        // Stage'i input processor yapıyoruz ki butona tıklayabilelim
-        Gdx.input.setInputProcessor(stage);
+        // InputMultiplexer ile hem Stage hem keyboard inputlarını işle
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);  // UI önce
+        multiplexer.addProcessor(new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                return handleKeyPress(keycode);
+            }
+        });
+        Gdx.input.setInputProcessor(multiplexer);
+
+        // State pattern başlat
+        screenState = new PlayingState();
+        screenState.enter(this);
     }
 
     private void handleInput() {
@@ -138,9 +159,17 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) player.equipWeapon(new SwordStrategy());
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) player.equipWeapon(new BowStrategy());
         if (Gdx.input.isKeyJustPressed(Input.Keys.P)) player.equipWeapon(new DoubleShotDecorator(player.getAttackStrategy()));
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) saveManager.saveGame(player);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) saveManager.loadGame(player);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) saveGame();
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) loadGame();
         if (Gdx.input.isKeyJustPressed(Input.Keys.H)) player.takeDamage(10);
+    }
+
+    public boolean handleKeyPress(int keycode) {
+        if (keycode == Input.Keys.ESCAPE) {
+            togglePause();
+            return true;
+        }
+        return false;
     }
 
     private void checkCollisions() {
@@ -208,6 +237,12 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Eğer pause edilmişse, sadece pause menüyü göster
+        if (isPaused) {
+            renderPausedState(delta);
+            return;
+        }
+
         // Track elapsed time
         elapsedTime += delta;
 
@@ -306,6 +341,83 @@ public class GameScreen implements Screen {
         // UI çizimi batch.end()'den SONRA yapılmalı.
         stage.act();
         stage.draw();
+    }
+
+    private void renderPausedState(float delta) {
+        // Arka planda oyunu çiz (donmuş halde)
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        batch.begin();
+        for (Platform p : platforms) {
+            p.draw(batch);
+        }
+        batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
+        for (Enemy e : enemies) e.draw(batch);
+        for (Bullet b : bullets) if (b.active) b.draw(batch);
+        for (SwordSlash slash : swordSlashes) slash.draw(batch);
+        batch.end();
+
+        stage.act();
+        stage.draw();
+
+        // Pause menüyü çiz
+        if (screenState instanceof PausedState) {
+            PausedState pausedState = (PausedState) screenState;
+            if (pausedState.getPauseMenu() != null) {
+                pausedState.getPauseMenu().render(delta);
+            }
+        }
+    }
+
+    // YENİ: Pause/Resume metodları
+    public void togglePause() {
+        if (isPaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
+    }
+
+    public void pauseGame() {
+        screenState.exit(this);
+        screenState = new PausedState();
+        screenState.enter(this);
+        isPaused = true;
+    }
+
+    public void resumeGame() {
+        // Input processor'ı geri yükle
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
+        multiplexer.addProcessor(new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                return handleKeyPress(keycode);
+            }
+        });
+        Gdx.input.setInputProcessor(multiplexer);
+
+        screenState.exit(this);
+        screenState = new PlayingState();
+        screenState.enter(this);
+        isPaused = false;
+    }
+
+    public void saveGame() {
+        GameStateMemento memento = saveManager.createMemento(player, enemies, bullets, platforms);
+        saveManager.saveMemento(memento);
+    }
+
+    public void loadGame() {
+        GameStateMemento memento = saveManager.loadMemento();
+        if (memento != null) {
+            saveManager.applyMemento(memento, player, enemies, bullets, platforms);
+        }
+    }
+
+    public MainGame getMainGame() {
+        return mainGame;
     }
 
     @Override
