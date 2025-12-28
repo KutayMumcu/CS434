@@ -23,8 +23,15 @@ public class PatrollingEnemy extends Enemy {
 
             // Check for edge before chasing
             if (isEdgeAhead(chaseDirection, getPlatforms())) {
-                // Edge ahead! Stop moving to avoid falling
-                velocity.x = 0;
+                // Edge ahead! Try to jump over it
+                if (onGround && jumpCooldownTimer <= 0) {
+                    jump();
+                    // Keep chasing while jumping
+                    velocity.x = speed * 1.5f * chaseDirection;
+                } else {
+                    // Can't jump right now, stop to avoid falling
+                    velocity.x = 0;
+                }
             } else {
                 // Safe to chase
                 velocity.x = speed * 1.5f * chaseDirection;
@@ -37,11 +44,19 @@ public class PatrollingEnemy extends Enemy {
         } else {
             // Normal devriye - check for edges
             if (isEdgeAhead(direction, getPlatforms())) {
-                // Edge ahead! Turn around
-                direction *= -1;
+                // Edge ahead! Try to jump over it
+                if (onGround && jumpCooldownTimer <= 0) {
+                    jump();
+                    // Keep moving forward while jumping
+                    velocity.x = speed * direction;
+                } else {
+                    // Can't jump right now, turn around
+                    direction *= -1;
+                    velocity.x = speed * direction;
+                }
+            } else {
+                velocity.x = speed * direction;
             }
-
-            velocity.x = speed * direction;
 
             // Sınırlara geldiyse yön değiştir
             if (bounds.x > startX + movementRange) {

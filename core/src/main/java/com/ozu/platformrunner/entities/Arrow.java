@@ -39,8 +39,8 @@ public class Arrow implements Pool.Poolable {
 
         bounds.x += speed * direction * delta;
 
-        // Deactivate when off-screen
-        if (bounds.x < -50 || bounds.x > 2050) {
+        // Deactivate when far off-screen (increased range to fix shooting issues at map edges)
+        if (bounds.x < -100 || bounds.x > 2500) {
             active = false;
         }
     }

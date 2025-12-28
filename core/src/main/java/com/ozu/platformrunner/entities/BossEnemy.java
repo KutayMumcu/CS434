@@ -32,8 +32,14 @@ public class BossEnemy extends Enemy {
 
             // Check edge before backing away
             if (isEdgeAhead(backAwayDirection, getPlatforms())) {
-                // Can't back away, edge behind! Stand ground
-                velocity.x = 0;
+                // Edge behind! Try to jump over it while backing away
+                if (onGround && jumpCooldownTimer <= 0) {
+                    jump();
+                    velocity.x = 40f * backAwayDirection;
+                } else {
+                    // Can't jump, stand ground
+                    velocity.x = 0;
+                }
             } else {
                 // Safe to back away
                 velocity.x = 40f * backAwayDirection;
@@ -52,8 +58,17 @@ public class BossEnemy extends Enemy {
         else {
             // Check edge before patrolling
             if (isEdgeAhead(patrolDirection, getPlatforms())) {
-                // Edge ahead! Turn around
-                patrolDirection *= -1;
+                // Edge ahead! Try to jump over it
+                if (onGround && jumpCooldownTimer <= 0) {
+                    jump();
+                    velocity.x = speed * patrolDirection;
+                } else {
+                    // Can't jump, turn around
+                    patrolDirection *= -1;
+                    velocity.x = speed * patrolDirection;
+                }
+            } else {
+                velocity.x = speed * patrolDirection;
             }
 
             // Check if reached patrol boundaries
@@ -64,8 +79,6 @@ public class BossEnemy extends Enemy {
             } else if (distanceFromStart <= -patrolRange) {
                 patrolDirection = 1;
             }
-
-            velocity.x = speed * patrolDirection;
         }
     }
 

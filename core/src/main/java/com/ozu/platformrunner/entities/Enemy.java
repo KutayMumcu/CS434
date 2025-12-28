@@ -83,13 +83,6 @@ public abstract class Enemy {
             }
         }
 
-        // Zemin kontrolü (Basit zemin)
-        if (bounds.y < 0) {
-            bounds.y = 0;
-            velocity.y = 0;
-            onGround = true;
-        }
-
         // Death by falling into pit (same as player)
         if (bounds.y < -50) {
             currentHealth = 0; // Enemy dies from falling

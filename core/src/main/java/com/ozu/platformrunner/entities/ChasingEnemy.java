@@ -14,11 +14,17 @@ public class ChasingEnemy extends Enemy {
 
         // Check for edge before chasing
         if (isEdgeAhead(chaseDirection, getPlatforms())) {
-            // Edge ahead! Stop to avoid falling
-            velocity.x = 0;
-            // But still try to jump if player is reachable
-            if (shouldJumpToPlayer(player, 150f, 30f)) {
+            // Edge ahead! Try to jump over it while chasing
+            if (onGround && jumpCooldownTimer <= 0) {
                 jump();
+                // Keep chasing aggressively while jumping
+                velocity.x = speed * chaseDirection;
+            } else {
+                // Can't jump right now, but still try to jump if player is reachable
+                velocity.x = 0;
+                if (shouldJumpToPlayer(player, 150f, 30f)) {
+                    jump();
+                }
             }
         } else {
             // Safe to chase - go for it!
