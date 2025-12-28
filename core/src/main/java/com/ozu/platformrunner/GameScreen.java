@@ -52,8 +52,13 @@ public class GameScreen implements Screen {
     private static final float WORLD_HEIGHT = 480;
     private static final float MAP_LIMIT_X = 2000;
 
+    private int currentLevelId;
+    private float elapsedTime;
+
     public GameScreen(MainGame game, int levelId) {
         this.mainGame = game;
+        this.currentLevelId = levelId;
+        this.elapsedTime = 0f;
 
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
@@ -74,6 +79,7 @@ public class GameScreen implements Screen {
         if (levelId == -1) {
             LevelManager.loadLevel(1, platforms, enemies);
             saveManager.loadGame(player);
+            this.currentLevelId = 1;
         } else {
             LevelManager.loadLevel(levelId, platforms, enemies);
             GameManager.getInstance().setLevel(levelId);
@@ -189,13 +195,24 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Track elapsed time
+        elapsedTime += delta;
+
+        // Death: Instant restart of current level
         if (player.getHealth() <= 0) {
-            mainGame.setScreen(new MainMenuScreen(mainGame));
+            mainGame.setScreen(new GameScreen(mainGame, currentLevelId));
             return;
         }
 
+        // Victory: Show victory screen with stats
         if (enemies.size == 0) {
-            mainGame.setScreen(new MainMenuScreen(mainGame));
+            mainGame.setScreen(new VictoryScreen(
+                mainGame,
+                currentLevelId,
+                GameManager.getInstance().getScore(),
+                player.getHealth(),
+                elapsedTime
+            ));
             return;
         }
 
