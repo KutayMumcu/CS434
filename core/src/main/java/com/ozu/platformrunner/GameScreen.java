@@ -176,6 +176,22 @@ public class GameScreen implements Screen {
         player.setOnGround(false);
 
         for (Platform platform : platforms) {
+            // Check if player's bottom is at or very close to platform's top
+            float playerBottom = player.getBounds().y;
+            float platformTop = platform.getBounds().y + platform.getBounds().height;
+            float verticalDistance = Math.abs(playerBottom - platformTop);
+
+            // Check if player is horizontally aligned with platform
+            boolean horizontallyAligned = player.getBounds().x + player.getBounds().width > platform.getBounds().x &&
+                                         player.getBounds().x < platform.getBounds().x + platform.getBounds().width;
+
+            // If player is standing on or very close to platform top (within 2 pixels)
+            if (horizontallyAligned && verticalDistance < 2f && player.getVelocity().y <= 0) {
+                player.getBounds().y = platformTop;
+                player.getVelocity().y = 0;
+                player.setOnGround(true);
+            }
+
             if (Intersector.overlaps(player.getBounds(), platform.getBounds())) {
                 Rectangle intersection = new Rectangle();
                 Intersector.intersectRectangles(player.getBounds(), platform.getBounds(), intersection);
@@ -183,8 +199,8 @@ public class GameScreen implements Screen {
                 // Determine which side we're colliding from
                 if (intersection.height < intersection.width) {
                     // Vertical collision (top or bottom)
-                    if (player.getVelocity().y < 0) {
-                        // Falling down, hit top of platform
+                    if (player.getVelocity().y <= 0) {
+                        // Falling down or standing still, hit top of platform
                         player.getBounds().y = platform.getBounds().y + platform.getBounds().height;
                         player.getVelocity().y = 0;
                         player.setOnGround(true);
@@ -300,7 +316,7 @@ public class GameScreen implements Screen {
 
         // Enemy collision with player (damage player)
         for (Enemy enemy : enemies) {
-            if (Intersector.overlaps(player.getBounds(), enemy.getBounds()) && !player.isInvulnerable()) {
+            if (Intersector.overlaps(player.getBounds(), enemy.getBounds())) {
                 player.takeDamage(5);
 
                 // Apply smooth knockback
