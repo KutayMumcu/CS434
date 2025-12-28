@@ -66,6 +66,50 @@ public class LevelSelectScreen implements Screen {
             }
         });
         table.add(lvl3).pad(20);
+        table.row();
+
+        // LEVEL 4 - Vertical Challenge
+        TextButton lvl4 = new TextButton("LEVEL 4", buttonStyle);
+        lvl4.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game, 4));
+            }
+        });
+        table.add(lvl4).pad(20);
+        table.row();
+
+        // LEVEL 5 - Enemy Gauntlet
+        TextButton lvl5 = new TextButton("LEVEL 5", buttonStyle);
+        lvl5.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game, 5));
+            }
+        });
+        table.add(lvl5).pad(20);
+        table.row();
+
+        // LEVEL 6 - The Maze
+        TextButton lvl6 = new TextButton("LEVEL 6", buttonStyle);
+        lvl6.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game, 6));
+            }
+        });
+        table.add(lvl6).pad(20);
+        table.row();
+
+        // LEVEL 7 - Final Showdown
+        TextButton lvl7 = new TextButton("LEVEL 7", buttonStyle);
+        lvl7.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game, 7));
+            }
+        });
+        table.add(lvl7).pad(20);
     }
 
     @Override
