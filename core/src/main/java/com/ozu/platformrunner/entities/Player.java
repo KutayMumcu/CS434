@@ -17,8 +17,8 @@ import java.util.List;
 public class Player {
     // Fizik Sabitleri
     private static final float MOVE_SPEED = 200f;
-    private static final float JUMP_VELOCITY = 450f; // Zıplamayı biraz güçlendirdim
-    private static final float GRAVITY = -900f;      // Yerçekimini biraz artırdım (daha tok hissiyat)
+    private static final float JUMP_VELOCITY = 450f; // Zıplama gücü
+    private static final float GRAVITY = -900f;      // Yerçekimi
 
     private final Rectangle bounds;
     private final Vector2 velocity;
@@ -32,7 +32,9 @@ public class Player {
     private final List<GameObserver> observers;
 
     // Harita Sınırı
-    private static final float MAP_WIDTH = 2000f; // Harita ne kadar uzunsa buraya yaz
+    private static final float MAP_WIDTH = 2000f;
+
+    private int facingDirection = 1; // 1: Sağ, -1: Sol
 
     public Player(float x, float y, float width, float height) {
         bounds = new Rectangle(x, y, width, height);
@@ -57,7 +59,7 @@ public class Player {
         bounds.x += velocity.x * delta;
         bounds.y += velocity.y * delta;
 
-        // --- DÜZELTME 1: HARİTA SINIRLARI ---
+        // Harita Sınırları
         // Sol Sınır
         if (bounds.x < 0) {
             bounds.x = 0;
@@ -114,8 +116,18 @@ public class Player {
     }
 
     // --- Hareket ---
-    public void moveX(int direction) { velocity.x = direction * MOVE_SPEED; }
-    public void stopX() { velocity.x = 0; }
+    public void moveX(int direction) {
+        velocity.x = direction * MOVE_SPEED;
+        if (direction != 0) {
+            this.facingDirection = direction; // Yönü kaydet
+        }
+    }
+
+    // --- EKSİK METOTLAR EKLENDİ ---
+
+    public void stopX() {
+        velocity.x = 0;
+    }
 
     public void jump() {
         if (onGround) {
@@ -125,6 +137,7 @@ public class Player {
     }
 
     // Getter
+    public int getFacingDirection() { return facingDirection; }
     public Rectangle getBounds() { return bounds; }
     public Vector2 getVelocity() { return velocity; }
     public boolean isOnGround() { return onGround; }

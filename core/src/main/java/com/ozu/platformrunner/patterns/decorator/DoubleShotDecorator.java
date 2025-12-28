@@ -15,18 +15,24 @@ public class DoubleShotDecorator extends StrategyDecorator {
 
     @Override
     public void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets) {
-        // 1. Önce normal saldırıyı yap (Tek ok at veya kılıç salla)
+        // 1. Önce normal saldırıyı yap (Asıl strateji yönü kendi içinde hallediyor olmalı)
         super.attack(player, enemies, bullets);
 
         System.out.println(">>> ÇİFT ATIŞ GÜCÜ DEVREDE! <<<");
 
         // 2. Ekstra bir mermi daha oluştur (Hafif yukarıdan)
-        // Not: Burada stratejinin tipini kontrol etmeden direkt mermi ekliyoruz.
-        // Kılıç kullansa bile büyülü bir mermi çıkması "PowerUp" mantığına uyar.
         Bullet b = PoolManager.getInstance().bulletPool.obtain();
 
-        // Oyuncunun biraz yukarısından ikinci mermiyi at
-        b.init(player.getBounds().x + 20, player.getBounds().y + 30, 1);
+        // Oyuncunun yönünü al
+        int dir = player.getFacingDirection();
+
+        // Merminin çıkış noktasını yöne göre ayarla
+        // Yöne göre biraz ileri veya geri alıyoruz ki karakterin içinden çıkmasın
+        float startX = (dir == 1) ? player.getBounds().x + 25 : player.getBounds().x - 10;
+
+        // Mermiyi oyuncunun biraz yukarısından (y + 30) fırlat
+        b.init(startX, player.getBounds().y + 30, dir);
+
         bullets.add(b);
     }
 }

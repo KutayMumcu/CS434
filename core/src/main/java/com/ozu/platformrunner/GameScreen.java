@@ -79,11 +79,14 @@ public class GameScreen implements Screen {
             GameManager.getInstance().setLevel(levelId);
         }
 
-        hud = new HUD();
+        stage = new Stage(new ScreenViewport());
+        setupUI();
+
+        // YENİ: HUD'u stage ile başlat
+        hud = new HUD(stage);
         player.addObserver(hud);
 
         // --- PAUSE BUTONU (UI) ---
-        stage = new Stage(new ScreenViewport());
 
         BitmapFont font = new BitmapFont();
         TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
@@ -125,24 +128,63 @@ public class GameScreen implements Screen {
     }
 
     private void checkCollisions() {
+        // Varsayılan olarak havada kabul et
         player.setOnGround(false);
 
         for (Platform platform : platforms) {
+            // 1. NORMAL ÇARPIŞMA (İç içe geçmeyi önle)
             if (Intersector.overlaps(player.getBounds(), platform.getBounds())) {
                 Rectangle intersection = new Rectangle();
                 Intersector.intersectRectangles(player.getBounds(), platform.getBounds(), intersection);
 
-                // --- DÜZELTME 3: ZIPLAMA SORUNU ---
-                // Eskiden: player.getVelocity().y < 0
-                // Yeni:    player.getVelocity().y <= 0
-                // Sebep:   Karakter yerde dururken hızı 0'dır. "<" derseniz yerçekimi işlemez, onGround true olmaz.
+                // Yukarıdan düşerken platformun içine girdiyse yukarı taşı
                 if (intersection.width > intersection.height && player.getVelocity().y <= 0) {
                     player.getBounds().y = platform.getBounds().y + platform.getBounds().height;
                     player.getVelocity().y = 0;
-                    player.setOnGround(true);
                 }
             }
+
+            // 2. "AYAK" SENSÖRÜ (Zıplama için yere basma kontrolü)
+            // Karakterin 2 piksel altını kontrol eden sanal bir kutu
+            Rectangle footSensor = new Rectangle(
+                player.getBounds().x + 2,       // Biraz içeriden başla (kenarlara takılmasın)
+                player.getBounds().y - 2,       // Karakterin 2 piksel altı
+                player.getBounds().width - 4,   // Genişlik
+                2                               // Yükseklik
+            );
+
+            // Eğer bu sensör platforma değiyorsa VE hızımız yukarı doğru değilse -> YERDEYİZ
+            if (Intersector.overlaps(footSensor, platform.getBounds()) && player.getVelocity().y <= 0) {
+                player.setOnGround(true);
+            }
         }
+    }
+
+    private void setupUI() {
+        // 1. Font ve Stil Hazırlığı
+        BitmapFont font = new BitmapFont();
+        TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
+        btnStyle.font = font;
+        btnStyle.fontColor = Color.YELLOW;
+
+        // 2. MENU Butonu Oluşturma
+        TextButton menuBtn = new TextButton("MENU", btnStyle);
+
+        // Dinamik Konumlandırma: Ekranın sağ üst köşesi
+        // (Genişlik - 100, Yükseklik - 50)
+        menuBtn.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+
+        // 3. Tıklama Olayı
+        menuBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // Ana Menüye Dön
+                mainGame.setScreen(new MainMenuScreen(mainGame));
+            }
+        });
+
+        // 4. Sahneye (Stage) Ekleme
+        stage.addActor(menuBtn);
     }
 
     @Override
@@ -199,7 +241,6 @@ public class GameScreen implements Screen {
         batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
         for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) if (b.active) b.draw(batch);
-        hud.render(batch);
         batch.end();
 
         // --- DÜZELTME 4: UI ÇİZİMİ ---
@@ -221,7 +262,6 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
-        hud.dispose();
         stage.dispose();
     }
 }

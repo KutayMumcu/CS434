@@ -10,16 +10,14 @@ public class BowStrategy implements AttackStrategy {
 
     @Override
     public void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets) {
-        // 1. Havuzdan bir mermi al (Obtain)
         Bullet b = PoolManager.getInstance().bulletPool.obtain();
 
-        // 2. Mermiyi hazırla (Init)
-        // Yönü oyuncunun son hareket yönüne göre yapmak lazım ama şimdilik sağ (1)
-        b.init(player.getBounds().x + 20, player.getBounds().y + 10, 1);
+        int dir = player.getFacingDirection();
 
-        // 3. Aktif listeye ekle (Ekranda çizilmesi için)
+        // Merminin çıkış noktasını yöne göre ayarla (Sağdaysa sağdan, soldaysa soldan çıksın)
+        float startX = (dir == 1) ? player.getBounds().x + 25 : player.getBounds().x - 10;
+
+        b.init(startX, player.getBounds().y + 10, dir);
         bullets.add(b);
-
-        System.out.println("Havuzdan mermi çekildi. Aktif mermi sayısı: " + bullets.size);
     }
 }
