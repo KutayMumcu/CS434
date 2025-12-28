@@ -6,22 +6,31 @@ import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.entities.Player;
 
 public class SwordStrategy implements AttackStrategy {
-    private float range = 50f; // Kılıç menzili
+    private float range = 80f; // Menzili biraz artırdım
 
     @Override
     public void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets) {
-        System.out.println("Kılıç sallandı!"); // Ses efekti burada çalınabilir
+        System.out.println("Kılıç sallandı!");
 
         for (Enemy enemy : enemies) {
-            // Basit mesafe kontrolü (Hitbox çakışması veya mesafe)
+            // Mesafe hesapla
             float distance = Math.abs(player.getBounds().x - enemy.getBounds().x);
+            float yDistance = Math.abs(player.getBounds().y - enemy.getBounds().y);
 
-            // Eğer düşman menzildeyse ve Y ekseninde yakınsa
-            if (distance < range && Math.abs(player.getBounds().y - enemy.getBounds().y) < 50) {
-                System.out.println("Düşmana kılıç isabet etti!");
-                // İleride: enemy.takeDamage(10);
-                // Şimdilik görsel olarak düşmanı uzağa atalım ki vurduğumuzu anlayalım
-                enemy.getBounds().x += 100;
+            // Eğer menzildeyse VE aynı yükseklikteyse (yDistance kontrolü önemli)
+            if (distance < range && yDistance < 50) {
+
+                // --- DÜZELTME 2: GERÇEK HASAR VERME ---
+                enemy.takeDamage(10);
+
+                // Vurulan düşmanı biraz geri it (Geri tepme efekti)
+                if (enemy.getBounds().x > player.getBounds().x) {
+                    enemy.getBounds().x += 30;
+                } else {
+                    enemy.getBounds().x -= 30;
+                }
+
+                System.out.println("Düşmana hasar verildi! Kalan can: " + enemy.getBounds());
             }
         }
     }

@@ -8,14 +8,15 @@ public class MainGame extends Game {
 
     @Override
     public void create() {
-        // 1. Kaynakları Yükle (Facade Kullanımı)
+        // Kaynakları yükle
         ResourceManager.getInstance().loadAllResources();
 
-        // 2. Oyun Durumunu Başlat (Singleton Kullanımı)
-        GameManager.getInstance().setCurrentState(GameManager.GameState.PLAYING);
+        // Oyun Durumunu Başlat
+        GameManager.getInstance().setCurrentState(GameManager.GameState.MENU);
 
-        // 3. Ekrana Geç
-        setScreen(new GameScreen());
+        // DİKKAT: Artık Menü ile başlıyoruz!
+        // this parametresini geçiyoruz ki menü diğer ekranlara geçiş yapabilsin
+        setScreen(new MainMenuScreen(this));
     }
 
     @Override

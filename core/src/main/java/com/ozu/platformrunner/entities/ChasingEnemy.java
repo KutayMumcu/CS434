@@ -8,12 +8,11 @@ public class ChasingEnemy extends Enemy {
     }
 
     @Override
-    public void update(float delta, Player player) {
-        // Oyuncu nerede? Ona doğru git.
+    protected void moveBehavior(float delta, Player player) {
         if (player.getBounds().x > bounds.x) {
-            bounds.x += speed * delta; // Sağa git
+            velocity.x = speed; // Sağa hız ver
         } else {
-            bounds.x -= speed * delta; // Sola git
+            velocity.x = -speed; // Sola hız ver
         }
     }
 }

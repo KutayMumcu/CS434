@@ -2,53 +2,54 @@ package com.ozu.platformrunner.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.ozu.platformrunner.patterns.decorator.StrategyDecorator;
+import com.ozu.platformrunner.patterns.observer.GameEvent;
+import com.ozu.platformrunner.patterns.observer.GameObserver;
 import com.ozu.platformrunner.patterns.state.IdleState;
 import com.ozu.platformrunner.patterns.state.PlayerState;
 import com.ozu.platformrunner.patterns.strategy.AttackStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
+import com.ozu.platformrunner.patterns.decorator.StrategyDecorator;
 import com.badlogic.gdx.utils.Array;
-import com.ozu.platformrunner.patterns.observer.GameObserver;
-import com.ozu.platformrunner.patterns.observer.GameEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
     // Fizik Sabitleri
     private static final float MOVE_SPEED = 200f;
-    private static final float JUMP_VELOCITY = 400f;
-    private static final float GRAVITY = -800f;
+    private static final float JUMP_VELOCITY = 450f; // Zıplamayı biraz güçlendirdim
+    private static final float GRAVITY = -900f;      // Yerçekimini biraz artırdım (daha tok hissiyat)
 
     private final Rectangle bounds;
     private final Vector2 velocity;
     private boolean onGround;
 
-    // --- YENİ: STATE PATTERN DEĞİŞKENİ ---
     private PlayerState currentState;
     private AttackStrategy attackStrategy;
 
+    // Can Sistemi
     private int health = 100;
     private final List<GameObserver> observers;
+
+    // Harita Sınırı
+    private static final float MAP_WIDTH = 2000f; // Harita ne kadar uzunsa buraya yaz
 
     public Player(float x, float y, float width, float height) {
         bounds = new Rectangle(x, y, width, height);
         velocity = new Vector2(0, 0);
         onGround = false;
 
-        // Başlangıç durumu: Idle (Duruyor)
+        observers = new ArrayList<>();
         currentState = new IdleState();
         currentState.enter(this);
-
-        observers = new ArrayList<>();
 
         this.attackStrategy = new SwordStrategy();
     }
 
     public void update(float delta) {
-        // 1. Duruma özgü mantığı çalıştır (State Update)
         currentState.update(this, delta);
 
-        // 2. Fizik Motoru (Burası ortak kalabilir)
+        // Fizik Uygula
         if (!onGround) {
             velocity.y += GRAVITY * delta;
         }
@@ -56,106 +57,78 @@ public class Player {
         bounds.x += velocity.x * delta;
         bounds.y += velocity.y * delta;
 
-        // Alt sınır kontrolü (Geçici zemin)
-        if (bounds.y < 0) {
-            bounds.y = 0;
-            velocity.y = 0;
-            onGround = true; // State bunu algılayıp Falling -> Idle yapacak
+        // --- DÜZELTME 1: HARİTA SINIRLARI ---
+        // Sol Sınır
+        if (bounds.x < 0) {
+            bounds.x = 0;
+            velocity.x = 0;
+        }
+        // Sağ Sınır
+        if (bounds.x > MAP_WIDTH - bounds.width) {
+            bounds.x = MAP_WIDTH - bounds.width;
+            velocity.x = 0;
+        }
+
+        // Aşağı Düşme Kontrolü (Ölüm)
+        if (bounds.y < -50) {
+            takeDamage(1000); // Direkt öldür
         }
     }
 
-    // --- OBSERVER METOTLARI ---
-    public void addObserver(GameObserver observer) {
-        observers.add(observer);
+    public void performAttack(Array<Enemy> enemies, Array<Bullet> bullets) {
+        attackStrategy.attack(this, enemies, bullets);
     }
 
-    public void removeObserver(GameObserver observer) {
-        observers.remove(observer);
+    public void equipWeapon(AttackStrategy newStrategy) {
+        this.attackStrategy = newStrategy;
+        System.out.println("Silah değişti: " + newStrategy.getClass().getSimpleName());
+    }
+
+    public void addPowerUp(StrategyDecorator decorator) {
+        this.attackStrategy = decorator;
+    }
+
+    public void changeState(PlayerState newState) {
+        currentState.exit(this);
+        this.currentState = newState;
+        currentState.enter(this);
+    }
+
+    // --- Observer & Health ---
+    public void addObserver(GameObserver observer) { observers.add(observer); }
+
+    public void takeDamage(int amount) {
+        this.health -= amount;
+        if (this.health < 0) this.health = 0;
+        notifyObservers(GameEvent.HEALTH_CHANGED);
+        if (this.health == 0) notifyObservers(GameEvent.PLAYER_DIED);
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
+        notifyObservers(GameEvent.HEALTH_CHANGED);
     }
 
     private void notifyObservers(GameEvent event) {
-        for (GameObserver observer : observers) {
-            observer.onNotify(this, event);
-        }
+        for (GameObserver o : observers) o.onNotify(this, event);
     }
 
-    // --- STATE GEÇİŞ METODU ---
-    public void changeState(PlayerState newState) {
-        // Önceki durumdan çık
-        currentState.exit(this);
-
-        // Durumu değiştir
-        this.currentState = newState;
-
-        // Yeni duruma gir
-        currentState.enter(this);
-
-        // Debug için konsola yazdıralım
-        //System.out.println("Durum değişti: " + newState.getClass().getSimpleName());
-    }
-
-    // --- Hareket Metotları (Command Pattern bunları kullanıyor) ---
-    public void moveX(int direction) {
-        velocity.x = direction * MOVE_SPEED;
-    }
-
-    public void stopX() {
-        velocity.x = 0;
-    }
+    // --- Hareket ---
+    public void moveX(int direction) { velocity.x = direction * MOVE_SPEED; }
+    public void stopX() { velocity.x = 0; }
 
     public void jump() {
-        // Sadece yerdeysek zıpla (Bunu ilerde State içine de alabiliriz ama şimdilik burada kalsın)
         if (onGround) {
             velocity.y = JUMP_VELOCITY;
             onGround = false;
         }
     }
 
-    // YENİ: Silah Değiştirme Metodu
-    public void equipWeapon(AttackStrategy newStrategy) {
-        this.attackStrategy = newStrategy;
-        System.out.println("Silah değişti: " + newStrategy.getClass().getSimpleName());
-    }
-
-    // YENİ: Saldırı Metodu
-    public void performAttack(Array<Enemy> enemies, Array<Bullet> bullets) {
-        // İşi stratejiye devrediyoruz (Delegation)
-        attackStrategy.attack(this, enemies, bullets);
-    }
-
-    // --- CAN SİSTEMİ ---
-    public void takeDamage(int amount) {
-        this.health -= amount;
-        if (this.health < 0) this.health = 0;
-
-        System.out.println("Hasar alındı! Kalan can: " + health);
-
-        // Herkese haber ver: Can değişti!
-        notifyObservers(GameEvent.HEALTH_CHANGED);
-
-        if (this.health == 0) {
-            notifyObservers(GameEvent.PLAYER_DIED);
-        }
-    }
-
-    // Mevcut stratejiyi bir dekoratörle sarmala
-    public void addPowerUp(StrategyDecorator decorator) {
-        // Dekoratörün içine şu anki stratejiyi koyuyoruz
-        // Ancak decorator constructor'ında zaten strategy istiyoruz,
-        // bu yüzden kullanımı GameScreen'de yapacağız.
-        this.attackStrategy = decorator;
-        System.out.println("Güçlendirme alındı! Yeni strateji: " + attackStrategy.getClass().getSimpleName());
-    }
-
-    // Getter / Setter
-    public void setHealth(int health) {
-        this.health = health;
-        notifyObservers(GameEvent.HEALTH_CHANGED);
-    }
-    public AttackStrategy getAttackStrategy() { return attackStrategy; }
-    public int getHealth() { return health; }
+    // Getter
     public Rectangle getBounds() { return bounds; }
     public Vector2 getVelocity() { return velocity; }
     public boolean isOnGround() { return onGround; }
     public void setOnGround(boolean onGround) { this.onGround = onGround; }
+    public int getHealth() { return health; }
+    public AttackStrategy getAttackStrategy() { return attackStrategy; }
 }

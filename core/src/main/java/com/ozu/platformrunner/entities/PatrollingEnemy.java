@@ -12,7 +12,7 @@ public class PatrollingEnemy extends Enemy {
     }
 
     @Override
-    public void update(float delta, Player player) {
+    public void moveBehavior(float delta, Player player) {
         // Basit devriye mantığı
         bounds.x += speed * direction * delta;
 
