@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.patterns.observer.GameEvent;
 import com.ozu.platformrunner.patterns.observer.GameObserver;
@@ -13,32 +14,43 @@ public class HUD implements GameObserver {
     private Label scoreLabel;
     private Label levelLabel;
 
-    public HUD(Stage stage) { // Stage parametresi alıyor
+    public HUD(Stage stage) {
+        // --- Tablo Kurulumu ---
+        Table table = new Table();
+        table.setFillParent(true);
+        table.top(); // Tabloyu en tepeye yasla (UI aşağı kaymasın)
+        stage.addActor(table);
+
+        // --- Stiller ---
         BitmapFont font = new BitmapFont();
         Label.LabelStyle style = new Label.LabelStyle(font, Color.WHITE);
 
-        // Health label - top left
         healthLabel = new Label("Health: 100", style);
         healthLabel.setFontScale(2);
-        healthLabel.setPosition(20, 440);
-        stage.addActor(healthLabel);
 
-        // Score label - top left, below health
         scoreLabel = new Label("Score: 0", style);
         scoreLabel.setFontScale(1.5f);
-        scoreLabel.setPosition(20, 410);
         scoreLabel.setColor(Color.YELLOW);
-        stage.addActor(scoreLabel);
 
-        // Level label - top right
         levelLabel = new Label("Level: 1", style);
         levelLabel.setFontScale(1.5f);
-        levelLabel.setPosition(650, 440);
-        stage.addActor(levelLabel);
+
+        // --- DÜZENLEME ---
+
+        // 1. SATIR: Sol tarafta Health, Sağ taraf BOŞ (Menu butonu için)
+        table.add(healthLabel).left().padLeft(20).padTop(20).expandX();
+        table.add().expandX(); // Sağ üst köşeyi Menu butonuna rezerve et
+
+        table.row(); // Alt satıra geç
+
+        // 2. SATIR: Solda Score, Sağda Level
+        table.add(scoreLabel).left().padLeft(20).padTop(10);
+        table.add(levelLabel).right().padRight(20).padTop(10);
     }
 
     @Override
     public void onNotify(Player player, GameEvent event) {
+        // ARTIK DOĞRUDAN Player ALIYORUZ (Hata buradaydı)
         switch (event) {
             case HEALTH_CHANGED:
                 healthLabel.setText("Health: " + player.getHealth());
@@ -57,6 +69,4 @@ public class HUD implements GameObserver {
     public void updateLevel(int level) {
         levelLabel.setText("Level: " + level);
     }
-
-    // dispose metoduna gerek kalmadı, Stage fontu temizler.
 }
