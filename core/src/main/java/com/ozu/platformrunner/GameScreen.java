@@ -93,9 +93,16 @@ public class GameScreen implements Screen {
         saveManager = new SaveManager();
 
         if (levelId == -1) {
-            LevelManager.loadLevel(1, platforms, enemies);
-            saveManager.loadGame(player);
-            this.currentLevelId = 1;
+            // Load saved game
+            GameStateMemento memento = saveManager.loadMemento();
+            if (memento != null) {
+                saveManager.applyMemento(memento, player, enemies, bullets, arrows, platforms);
+                this.currentLevelId = memento.level;
+            } else {
+                // No save file exists, start from level 1
+                LevelManager.loadLevel(1, platforms, enemies);
+                this.currentLevelId = 1;
+            }
         } else {
             LevelManager.loadLevel(levelId, platforms, enemies);
             GameManager.getInstance().setLevel(levelId);
@@ -107,26 +114,6 @@ public class GameScreen implements Screen {
         // YENİ: HUD'u stage ile başlat
         hud = new HUD(stage);
         player.addObserver(hud);
-
-        // --- PAUSE BUTONU (UI) ---
-
-        BitmapFont font = new BitmapFont();
-        TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
-        btnStyle.font = font;
-        btnStyle.fontColor = Color.YELLOW;
-
-        TextButton menuBtn = new TextButton("MENU", btnStyle);
-        // Butonu ekranın sağ üstüne yerleştirelim
-        // Gdx.graphics.getWidth() kullanarak dinamik konumlandırma daha güvenlidir
-        menuBtn.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
-
-        menuBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                mainGame.setScreen(new MainMenuScreen(mainGame));
-            }
-        });
-        stage.addActor(menuBtn);
 
         // Girdi Yöneticisi: Hem UI (Stage) hem Oyun için
         // InputMultiplexer ile hem Stage hem keyboard inputlarını işle
@@ -415,6 +402,7 @@ public class GameScreen implements Screen {
         batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
         for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) if (b.active) b.draw(batch);
+        for (Arrow a : arrows) if (a.active) a.draw(batch);
         for (SwordSlash slash : swordSlashes) slash.draw(batch);
         batch.end();
 
@@ -465,14 +453,14 @@ public class GameScreen implements Screen {
     }
 
     public void saveGame() {
-        GameStateMemento memento = saveManager.createMemento(player, enemies, bullets, platforms);
+        GameStateMemento memento = saveManager.createMemento(player, enemies, bullets, arrows, platforms);
         saveManager.saveMemento(memento);
     }
 
     public void loadGame() {
         GameStateMemento memento = saveManager.loadMemento();
         if (memento != null) {
-            saveManager.applyMemento(memento, player, enemies, bullets, platforms);
+            saveManager.applyMemento(memento, player, enemies, bullets, arrows, platforms);
         }
     }
 

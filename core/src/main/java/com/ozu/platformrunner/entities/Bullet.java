@@ -44,7 +44,7 @@ public class Bullet implements Pool.Poolable {
         bounds.x += speed * direction * delta;
 
         // Ekrandan çıkınca pasife çek (Pool'a iade edilmeye hazır)
-        if (bounds.x < 0 || bounds.x > 1000) { // 1000: Dünya genişliği
+        if (bounds.x < 0 || bounds.x > 2000) { // 2000: Dünya genişliği
             active = false;
         }
     }

@@ -21,12 +21,14 @@ public class GameStateMemento {
     // YENİ: Tam oyun durumu
     public Array<EnemyData> enemies;
     public Array<BulletData> bullets;
+    public Array<ArrowData> arrows;
     public Array<PlatformData> platforms;
 
     // JSON serileştirme için boş constructor şarttır
     public GameStateMemento() {
         enemies = new Array<>();
         bullets = new Array<>();
+        arrows = new Array<>();
         platforms = new Array<>();
     }
 }

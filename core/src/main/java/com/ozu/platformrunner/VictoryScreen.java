@@ -81,16 +81,24 @@ public class VictoryScreen implements Screen {
         table.add(timeLabel).padBottom(50).row();
 
         // Buttons
-        TextButton nextLevelButton = new TextButton("NEXT LEVEL", buttonStyle);
-        nextLevelButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                int nextLevel = currentLevel + 1;
-                GameManager.getInstance().setLevel(nextLevel);
-                game.setScreen(new GameScreen(game, nextLevel));
-            }
-        });
-        table.add(nextLevelButton).width(200).height(50).padBottom(20).row();
+        // Only show "NEXT LEVEL" button if not on final level (7)
+        if (currentLevel < 7) {
+            TextButton nextLevelButton = new TextButton("NEXT LEVEL", buttonStyle);
+            nextLevelButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    int nextLevel = currentLevel + 1;
+                    GameManager.getInstance().setLevel(nextLevel);
+                    game.setScreen(new GameScreen(game, nextLevel));
+                }
+            });
+            table.add(nextLevelButton).width(200).height(50).padBottom(20).row();
+        } else {
+            // Final level - show congratulations message
+            Label congrats = new Label("GAME COMPLETED!", labelStyle);
+            congrats.setColor(Color.GOLD);
+            table.add(congrats).padBottom(20).row();
+        }
 
         TextButton menuButton = new TextButton("MAIN MENU", buttonStyle);
         menuButton.addListener(new ClickListener() {

@@ -21,7 +21,7 @@ public class SaveManager {
 
     // YENİ: TAM oyun durumu yakalama
     public GameStateMemento createMemento(Player player, Array<Enemy> enemies,
-                                           Array<Bullet> bullets, Array<Platform> platforms) {
+                                           Array<Bullet> bullets, Array<Arrow> arrows, Array<Platform> platforms) {
         GameStateMemento memento = new GameStateMemento();
 
         // Player temel veriler
@@ -76,6 +76,16 @@ public class SaveManager {
             memento.bullets.add(data);
         }
 
+        // Oklar
+        for (Arrow a : arrows) {
+            ArrowData data = new ArrowData();
+            data.x = a.getBounds().x;
+            data.y = a.getBounds().y;
+            data.direction = a.getDirection();
+            data.active = a.active;
+            memento.arrows.add(data);
+        }
+
         // Platformlar
         for (Platform p : platforms) {
             PlatformData data = new PlatformData();
@@ -112,7 +122,7 @@ public class SaveManager {
 
     // Memento'dan oyun durumunu geri yükle
     public void applyMemento(GameStateMemento memento, Player player,
-                              Array<Enemy> enemies, Array<Bullet> bullets, Array<Platform> platforms) {
+                              Array<Enemy> enemies, Array<Bullet> bullets, Array<Arrow> arrows, Array<Platform> platforms) {
         if (memento == null) return;
 
         // Player geri yükle
@@ -137,7 +147,14 @@ public class SaveManager {
         // Düşmanları geri yükle
         enemies.clear();
         for (EnemyData data : memento.enemies) {
-            EnemyType type = data.type.equals("PatrollingEnemy") ? EnemyType.PATROLLING : EnemyType.CHASING;
+            EnemyType type;
+            if (data.type.equals("PatrollingEnemy")) {
+                type = EnemyType.PATROLLING;
+            } else if (data.type.equals("BossEnemy")) {
+                type = EnemyType.BOSS;
+            } else {
+                type = EnemyType.CHASING;
+            }
             Enemy enemy = EnemyFactory.createEnemy(type, data.x, data.y);
             enemy.setHealth(data.currentHealth);
             enemy.getVelocity().set(data.velocityX, data.velocityY);
@@ -161,6 +178,18 @@ public class SaveManager {
                 bullet.setDirection(data.direction);
                 bullet.active = data.active;
                 bullets.add(bullet);
+            }
+        }
+
+        // Okları geri yükle
+        arrows.clear();
+        for (ArrowData data : memento.arrows) {
+            if (data.active) {
+                Arrow arrow = PoolManager.getInstance().arrowPool.obtain();
+                arrow.getBounds().setPosition(data.x, data.y);
+                arrow.setDirection(data.direction);
+                arrow.active = data.active;
+                arrows.add(arrow);
             }
         }
 

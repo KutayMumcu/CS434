@@ -58,4 +58,6 @@ public class Arrow implements Pool.Poolable {
     public int getDamage() { return damage; }
     public boolean isActive() { return active; }
     public void deactivate() { this.active = false; }
+    public int getDirection() { return direction; }
+    public void setDirection(int direction) { this.direction = direction; }
 }
