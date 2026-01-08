@@ -40,8 +40,12 @@ import com.ozu.platformrunner.patterns.state.PausedState;
 import com.ozu.platformrunner.patterns.state.PlayingState;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer; // Import ekle
 
 public class GameScreen implements Screen {
+
+    private ShapeRenderer shapeRenderer;
+    private boolean debugMode = false;
 
     private final MainGame mainGame;
     private final SpriteBatch batch;
@@ -74,6 +78,9 @@ public class GameScreen implements Screen {
     private boolean isPaused = false;
 
     public GameScreen(MainGame game, int levelId) {
+        // Constructor içine (batch = new SpriteBatch(); satırının altına):
+        shapeRenderer = new ShapeRenderer();
+
         this.mainGame = game;
         this.currentLevelId = levelId;
         this.elapsedTime = 0f;
@@ -160,6 +167,9 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) saveGame();
         if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) loadGame();
         if (Gdx.input.isKeyJustPressed(Input.Keys.H)) player.takeDamage(10);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
+            debugMode = !debugMode;
+        }
     }
 
     public boolean handleKeyPress(int keycode) {
@@ -410,6 +420,45 @@ public class GameScreen implements Screen {
         // UI çizimi batch.end()'den SONRA yapılmalı.
         stage.act();
         stage.draw();
+
+        // --- DÜZELTİLMİŞ DEBUG ÇİZİMİ (F1) ---
+        if (debugMode) {
+            // DİKKAT: Burada batch.end() veya batch.begin() KULLANMIYORUZ.
+            // Çünkü yukarıda zaten batch kapatıldı.
+
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Çizgi modunda başla
+
+            // 1. Oyuncu Kutusu (KIRMIZI)
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.rect(player.getBounds().x, player.getBounds().y,
+                player.getBounds().width, player.getBounds().height);
+
+            // 2. Platform Kutuları (YEŞİL)
+            shapeRenderer.setColor(Color.GREEN);
+            for (Platform p : platforms) {
+                shapeRenderer.rect(p.getBounds().x, p.getBounds().y,
+                    p.getBounds().width, p.getBounds().height);
+            }
+
+            // 3. Düşman Kutuları (TURUNCU)
+            shapeRenderer.setColor(Color.ORANGE);
+            for (Enemy e : enemies) {
+                shapeRenderer.rect(e.getBounds().x, e.getBounds().y,
+                    e.getBounds().width, e.getBounds().height);
+            }
+
+            // 4. Mermiler (SARI) - İstersen mermileri de görebilirsin
+            shapeRenderer.setColor(Color.YELLOW);
+            for (Bullet b : bullets) {
+                if(b.active)
+                    shapeRenderer.rect(b.getBounds().x, b.getBounds().y,
+                        b.getBounds().width, b.getBounds().height);
+            }
+
+            shapeRenderer.end(); // ShapeRenderer'ı kapat
+        }
+
     }
 
     private void renderPausedState(float delta) {

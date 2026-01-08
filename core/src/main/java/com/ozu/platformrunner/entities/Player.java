@@ -24,6 +24,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
+    // Görsel boyutu (64x64) ile Fizik boyutu (Örn: 20x50) farklı olacak
+    // ... (DRAW_WIDTH ve DRAW_HEIGHT aynen kalsın) ...
+    private static final float DRAW_WIDTH = 64f;
+    private static final float DRAW_HEIGHT = 64f;
+
+    // ... (HITBOX boyutları aynen kalsın) ...
+    private static final float HITBOX_WIDTH = 25f;
+    private static final float HITBOX_HEIGHT = 50f;
+
+    // --- DÜZELTME BURADA ---
+    // Görseli yatayda ortala ama dikeyde (Y ekseninde) AŞAĞI KAYDIRMA.
+    // drawOffsetY = 0 yaparsak görselin altı ile hitbox'ın altı eşitlenir.
+
+    private float drawOffsetX = (DRAW_WIDTH - HITBOX_WIDTH) / 2;
+    private float drawOffsetY = 0f; // ESKİSİ: (DRAW_HEIGHT - HITBOX_HEIGHT) / 2 idi.
+
+    // NOT: Eğer bu sefer de karakter havada uçuyormuş gibi durursa (görselin altında boşluk varsa),
+    // bu değeri negatif yapabilirsin. Örn: -5f (Yukarı değil, aşağı boşluk payı kadar)
+
+    // Görseli hitbox'a göre ortalamak için kaydırma miktarı
     // --- FİZİK SABİTLERİ ---
     private static final float MOVE_SPEED = 200f;
     private static final float JUMP_VELOCITY = 450f;
@@ -62,7 +82,7 @@ public class Player {
     private float attackCooldownTimer = 0f;
 
     public Player(float x, float y, float width, float height) {
-        bounds = new Rectangle(x, y, width, height);
+        bounds = new Rectangle(x, y, HITBOX_WIDTH, HITBOX_HEIGHT);
         velocity = new Vector2(0, 0);
         knockbackVelocity = new Vector2(0, 0);
         onGround = false;
@@ -187,7 +207,12 @@ public class Player {
         else if (invulnerabilityTimer > 0) batch.setColor(1, 1, 1, 0.5f);
         else batch.setColor(Color.WHITE);
 
-        batch.draw(currentFrame, bounds.x, bounds.y, bounds.width, bounds.height);
+        batch.draw(currentFrame,
+            bounds.x - drawOffsetX,
+            bounds.y - drawOffsetY,
+            DRAW_WIDTH,
+            DRAW_HEIGHT);
+
         batch.setColor(Color.WHITE);
     }
 
