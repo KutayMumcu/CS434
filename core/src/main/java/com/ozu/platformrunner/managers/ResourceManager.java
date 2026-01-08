@@ -2,24 +2,18 @@ package com.ozu.platformrunner.managers;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.audio.Sound;
 
-/**
- * Facade Pattern:
- * LibGDX'in karmaşık AssetManager yapısını basitleştirerek
- * dış dünyaya (istemciye) basit metotlar sunar.
- */
 public class ResourceManager {
-    private static ResourceManager instance; // Buna da Singleton diyebiliriz ama asıl olay Facade olması.
+    private static ResourceManager instance;
     public final AssetManager assetManager;
 
-    // Dosya yolları (Hardcoded stringlerden kurtulmak için)
-    public static final String TEXTURE_CHAR = "char.png";
+    // --- MEVCUT SABİTLER ---
     public static final String TEXTURE_PLATFORM = "platform.png";
-    public static final String TEXTURE_ENEMY = "char.png";
-    // İleride eklenecekler:
-    // public static final String TEXTURE_ENEMY = "enemy.png";
-    // public static final String SOUND_JUMP = "jump.wav";
+    // --- YENİ EKLENEN GÖRSELLER ---
+    public static final String TEXTURE_CHAR_RIGHT = "charRight.png";
+    public static final String TEXTURE_CHAR_LEFT = "charLeft.png";
+    public static final String TEXTURE_ENEMY_RIGHT = "enemyRight.png";
+    public static final String TEXTURE_ENEMY_LEFT = "enemyLeft.png";
 
     private ResourceManager() {
         assetManager = new AssetManager();
@@ -32,21 +26,24 @@ public class ResourceManager {
         return instance;
     }
 
-    // 1. Tüm varlıkları yükle
     public void loadAllResources() {
-        assetManager.load(TEXTURE_CHAR, Texture.class);
+        // Eskileri yükle
         assetManager.load(TEXTURE_PLATFORM, Texture.class);
+        // assetManager.load(TEXTURE_ENEMY, Texture.class); // Zaten char.png ile aynı
 
-        // Yükleme bitene kadar bekle (Senkronize)
+        // Yenileri yükle
+        assetManager.load(TEXTURE_CHAR_RIGHT, Texture.class);
+        assetManager.load(TEXTURE_CHAR_LEFT, Texture.class);
+        assetManager.load(TEXTURE_ENEMY_RIGHT, Texture.class);
+        assetManager.load(TEXTURE_ENEMY_LEFT, Texture.class);
+
         assetManager.finishLoading();
     }
 
-    // 2. Basitleştirilmiş Erişim Metotları
     public Texture getTexture(String name) {
         return assetManager.get(name, Texture.class);
     }
 
-    // 3. Temizlik
     public void dispose() {
         assetManager.dispose();
     }

@@ -74,19 +74,29 @@ public class MainMenuScreen implements Screen {
     }
 
     private void setupHelpButton() {
+        // --- SORU İŞARETİ BUTONU ---
         TextButton helpButton = new TextButton("?", buttonStyle);
-        helpButton.setPosition(Gdx.graphics.getWidth() - 60, Gdx.graphics.getHeight() - 60);
 
         helpButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // SADECE TEK SATIR!
-                // Pencereyi oluştur ve sahneye ekle
                 stage.addActor(new HelpWindow(labelStyle, buttonStyle));
             }
         });
 
-        stage.addActor(helpButton);
+        // --- YENİ YÖNTEM: UI TABLOSU İLE HİZALAMA ---
+        // Manuel setPosition yerine bir Tablo kullanıyoruz.
+        // Bu tablo ekran boyutunu takip eder ve içindekileri otomatik hizalar.
+
+        Table uiTable = new Table();
+        uiTable.setFillParent(true); // Tablo ekranın tamamını kaplasın
+        uiTable.top().right();       // İçeriği SAĞ ÜST köşeye yasla
+
+        // Butonu tabloya ekle ve kenarlardan biraz boşluk (pad) bırak
+        uiTable.add(helpButton).pad(20);
+
+        // Tabloyu sahneye ekle
+        stage.addActor(uiTable);
     }
 
     @Override

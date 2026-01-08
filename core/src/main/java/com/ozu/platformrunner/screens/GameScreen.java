@@ -60,7 +60,6 @@ public class GameScreen implements Screen {
     private final InputHandler inputHandler;
     private final SaveManager saveManager;
 
-    private final Texture charTexture;
     private final Texture platformTexture;
 
     private static final float WORLD_WIDTH = 800;
@@ -83,7 +82,6 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
 
-        charTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_CHAR);
         platformTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_PLATFORM);
 
         player = new Player(50, 200, 32, 32);
@@ -385,12 +383,8 @@ public class GameScreen implements Screen {
         for (Platform p : platforms) {
             p.draw(batch);
         }
-        // Draw player with hurt flash effect
-        if (player.isHurt() && ((int)(elapsedTime * 20) % 2 == 0)) {
-            batch.setColor(1, 0.3f, 0.3f, 1); // Red tint when hurt
-        }
-        batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
-        batch.setColor(Color.WHITE);
+
+        player.draw(batch);
 
         // Draw attack cooldown overlay
         if (player.isAttackOnCooldown()) {
@@ -424,14 +418,23 @@ public class GameScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
+
+        // Platformlar
         for (Platform p : platforms) {
             p.draw(batch);
         }
-        batch.draw(charTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
+
+        // --- DÜZELTME BURADA ---
+        // Eski: batch.draw(charTexture, ...);
+        // Yeni: Player kendi çizimini yapsın (Yön ve efektler korunsun)
+        player.draw(batch);
+        // -----------------------
+
         for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) if (b.active) b.draw(batch);
         for (Arrow a : arrows) if (a.active) a.draw(batch);
         for (SwordSlash slash : swordSlashes) slash.draw(batch);
+
         batch.end();
 
         stage.act();
