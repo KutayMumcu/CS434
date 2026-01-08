@@ -1,7 +1,6 @@
 package com.ozu.platformrunner.entities.enemies;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
@@ -11,6 +10,7 @@ import com.badlogic.gdx.utils.Array;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.ResourceManager;
+import com.ozu.platformrunner.utils.GameConstants;
 
 public abstract class Enemy {
     protected Rectangle bounds;
@@ -18,14 +18,13 @@ public abstract class Enemy {
     protected boolean onGround = false;
 
     protected float speed = 100f;
-    protected static final float GRAVITY = -800f;
     protected static final float JUMP_VELOCITY = 400f;
 
     protected float jumpCooldown = 1.0f;
     protected float jumpCooldownTimer = 0f;
     private Array<Platform> currentPlatforms;
 
-    protected int maxHealth = 30;
+    protected int maxHealth;
     protected int currentHealth;
 
     protected Texture textureRight;
@@ -33,10 +32,11 @@ public abstract class Enemy {
     protected Texture currentTexture;
     private Texture whitePixelTexture;
 
-    public Enemy(float x, float y, float width, float height) {
+    public Enemy(float x, float y, float width, float height, int health) {
         this.bounds = new Rectangle(x, y, width, height);
         this.velocity = new Vector2(0, 0);
-        this.currentHealth = maxHealth;
+        this.maxHealth = health;
+        this.currentHealth = health;
 
         textureRight = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_RIGHT);
         textureLeft = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_LEFT);
@@ -48,8 +48,9 @@ public abstract class Enemy {
         this.currentPlatforms = platforms;
         if (jumpCooldownTimer > 0) jumpCooldownTimer -= delta;
 
-        // Physics & Behavior
-        if (!onGround) velocity.y += GRAVITY * delta;
+        // Physics
+        if (!onGround) velocity.y += GameConstants.GRAVITY * delta;
+
         moveBehavior(delta, player);
 
         bounds.x += velocity.x * delta;
@@ -104,15 +105,15 @@ public abstract class Enemy {
             Rectangle pBounds = platform.getBounds();
             if (checkX >= pBounds.x && checkX <= pBounds.x + pBounds.width &&
                 checkY >= pBounds.y - 20 && checkY <= pBounds.y + pBounds.height) {
-                return false; // Ground exists
+                return false;
             }
         }
-        return true; // Edge detected
+        return true;
     }
 
     protected Array<Platform> getPlatforms() { return currentPlatforms; }
 
-    // --- Rendering & Stats ---
+    // --- Rendering ---
 
     public void draw(SpriteBatch batch) {
         if (velocity.x > 0) currentTexture = textureRight;

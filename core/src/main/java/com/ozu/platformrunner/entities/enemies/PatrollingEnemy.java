@@ -1,6 +1,7 @@
 package com.ozu.platformrunner.entities.enemies;
 
 import com.ozu.platformrunner.entities.Player;
+import com.ozu.platformrunner.utils.GameConstants;
 
 public class PatrollingEnemy extends Enemy {
     private float movementRange = 200f;
@@ -9,7 +10,7 @@ public class PatrollingEnemy extends Enemy {
     private float aggroRange = 300f;
 
     public PatrollingEnemy(float x, float y) {
-        super(x, y, 32, 32);
+        super(x, y, 32, 32, GameConstants.ENEMY_DEFAULT_HEALTH);
         this.startX = x;
         this.speed = 80f;
     }

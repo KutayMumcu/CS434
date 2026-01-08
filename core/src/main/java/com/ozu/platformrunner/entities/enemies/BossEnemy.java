@@ -5,6 +5,7 @@ import com.ozu.platformrunner.entities.projectiles.Arrow;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.PoolManager;
+import com.ozu.platformrunner.utils.GameConstants;
 
 public class BossEnemy extends Enemy {
     private float shootCooldown = 1.5f;
@@ -16,7 +17,7 @@ public class BossEnemy extends Enemy {
     private int patrolDirection = 1;
 
     public BossEnemy(float x, float y) {
-        super(x, y, 32, 32);
+        super(x, y, 32, 32, GameConstants.BOSS_ENEMY_HEALTH);
         this.maxHealth = 60;
         this.currentHealth = 60;
         this.speed = 50f;

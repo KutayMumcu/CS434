@@ -71,10 +71,6 @@ public class GameScreen implements Screen {
 
     private final Texture platformTexture;
 
-    private static final float WORLD_WIDTH = 800;
-    private static final float WORLD_HEIGHT = 480;
-    private static final float MAP_LIMIT_X = 2000;
-
     private int currentLevelId;
     private float elapsedTime;
 
@@ -89,7 +85,9 @@ public class GameScreen implements Screen {
 
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
+
+        // Use Constants for Camera Dimensions
+        camera.setToOrtho(false, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 
         platformTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_PLATFORM);
 
@@ -273,10 +271,14 @@ public class GameScreen implements Screen {
     }
 
     private void updateCamera() {
+        float halfScreen = GameConstants.WORLD_WIDTH / 2;
         float camX = player.getBounds().x;
-        if (camX < 400) camX = 400;
-        if (camX > MAP_LIMIT_X - 400) camX = MAP_LIMIT_X - 400;
-        camera.position.set(camX, 240, 0);
+
+        // Clamp camera within map limits
+        if (camX < halfScreen) camX = halfScreen;
+        if (camX > GameConstants.MAP_LIMIT_X - halfScreen) camX = GameConstants.MAP_LIMIT_X - halfScreen;
+
+        camera.position.set(camX, GameConstants.WORLD_HEIGHT / 2, 0);
         camera.update();
     }
 
@@ -320,7 +322,8 @@ public class GameScreen implements Screen {
             boolean horizontallyAligned = player.getBounds().x + player.getBounds().width > platform.getBounds().x &&
                 player.getBounds().x < platform.getBounds().x + platform.getBounds().width;
 
-            if (horizontallyAligned && verticalDistance < 2f && player.getVelocity().y <= 0) {
+            // Use Constant for Threshold
+            if (horizontallyAligned && verticalDistance < GameConstants.PLATFORM_TOP_THRESHOLD && player.getVelocity().y <= 0) {
                 player.getBounds().y = platformTop;
                 player.getVelocity().y = 0;
                 player.setOnGround(true);

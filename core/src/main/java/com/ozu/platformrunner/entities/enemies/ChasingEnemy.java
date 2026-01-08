@@ -1,11 +1,12 @@
 package com.ozu.platformrunner.entities.enemies;
 
 import com.ozu.platformrunner.entities.Player;
+import com.ozu.platformrunner.utils.GameConstants;
 
 public class ChasingEnemy extends Enemy {
 
     public ChasingEnemy(float x, float y) {
-        super(x, y, 32, 32);
+        super(x, y, 32, 32, GameConstants.ENEMY_DEFAULT_HEALTH);
         this.speed = 90f;
     }
 

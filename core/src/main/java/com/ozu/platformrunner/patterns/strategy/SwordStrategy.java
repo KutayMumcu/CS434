@@ -7,7 +7,6 @@ import com.ozu.platformrunner.entities.projectiles.Bullet;
 import com.ozu.platformrunner.utils.GameConstants;
 
 public class SwordStrategy implements AttackStrategy {
-    private float range = 80f;
 
     @Override
     public void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets) {
@@ -15,14 +14,13 @@ public class SwordStrategy implements AttackStrategy {
             float distance = Math.abs(player.getBounds().x - enemy.getBounds().x);
             float yDistance = Math.abs(player.getBounds().y - enemy.getBounds().y);
 
-            if (distance < range && yDistance < 50) {
+            if (distance < GameConstants.SWORD_RANGE_X && yDistance < GameConstants.SWORD_RANGE_Y) {
                 enemy.takeDamage(GameConstants.SWORD_DAMAGE);
 
-                // Apply simple knockback
                 if (enemy.getBounds().x > player.getBounds().x) {
-                    enemy.getBounds().x += 30;
+                    enemy.getBounds().x += GameConstants.SWORD_HIT_KNOCKBACK;
                 } else {
-                    enemy.getBounds().x -= 30;
+                    enemy.getBounds().x -= GameConstants.SWORD_HIT_KNOCKBACK;
                 }
             }
         }
