@@ -1,6 +1,5 @@
 package com.ozu.platformrunner.ui;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -11,8 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.ozu.platformrunner.GameScreen;
-import com.ozu.platformrunner.MainMenuScreen;
+import com.ozu.platformrunner.screens.GameScreen;
+import com.ozu.platformrunner.screens.MainMenuScreen;
 
 public class PauseMenuOverlay {
     private final Stage stage;

@@ -1,4 +1,4 @@
-package com.ozu.platformrunner;
+package com.ozu.platformrunner.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -20,15 +20,18 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import com.ozu.platformrunner.entities.Arrow;
-import com.ozu.platformrunner.entities.BossEnemy;
-import com.ozu.platformrunner.entities.Bullet;
-import com.ozu.platformrunner.entities.ChasingEnemy;
-import com.ozu.platformrunner.entities.PatrollingEnemy;
-import com.ozu.platformrunner.entities.Enemy;
+import com.ozu.platformrunner.ui.HUD;
+import com.ozu.platformrunner.utils.GameConstants;
+import com.ozu.platformrunner.MainGame;
+import com.ozu.platformrunner.entities.projectiles.Arrow;
+import com.ozu.platformrunner.entities.enemies.BossEnemy;
+import com.ozu.platformrunner.entities.projectiles.Bullet;
+import com.ozu.platformrunner.entities.enemies.ChasingEnemy;
+import com.ozu.platformrunner.entities.enemies.PatrollingEnemy;
+import com.ozu.platformrunner.entities.enemies.Enemy;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
-import com.ozu.platformrunner.entities.SwordSlash;
+import com.ozu.platformrunner.entities.projectiles.SwordSlash;
 import com.ozu.platformrunner.managers.*;
 import com.ozu.platformrunner.patterns.decorator.DoubleShotDecorator;
 import com.ozu.platformrunner.patterns.memento.GameStateMemento;

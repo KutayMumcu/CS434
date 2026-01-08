@@ -1,4 +1,4 @@
-package com.ozu.platformrunner.entities;
+package com.ozu.platformrunner.entities.projectiles;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;

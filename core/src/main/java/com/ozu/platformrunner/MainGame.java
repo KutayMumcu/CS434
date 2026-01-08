@@ -1,8 +1,11 @@
 package com.ozu.platformrunner;
 
 import com.badlogic.gdx.Game;
+import com.ozu.platformrunner.entities.enemies.Enemy;
+import com.ozu.platformrunner.entities.projectiles.SwordSlash;
 import com.ozu.platformrunner.managers.GameManager;
 import com.ozu.platformrunner.managers.ResourceManager;
+import com.ozu.platformrunner.screens.MainMenuScreen;
 
 public class MainGame extends Game {
 
@@ -26,8 +29,8 @@ public class MainGame extends Game {
         ResourceManager.getInstance().dispose();
 
         // Dispose static textures to prevent memory leaks
-        com.ozu.platformrunner.entities.Enemy.disposeStaticResources();
+        Enemy.disposeStaticResources();
         com.ozu.platformrunner.entities.Platform.disposeStaticResources();
-        com.ozu.platformrunner.entities.SwordSlash.disposeStaticResources();
+        SwordSlash.disposeStaticResources();
     }
 }

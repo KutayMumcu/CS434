@@ -1,8 +1,8 @@
 package com.ozu.platformrunner.managers;
 
 import com.badlogic.gdx.utils.Pool;
-import com.ozu.platformrunner.entities.Bullet;
-import com.ozu.platformrunner.entities.Arrow;
+import com.ozu.platformrunner.entities.projectiles.Bullet;
+import com.ozu.platformrunner.entities.projectiles.Arrow;
 
 public class PoolManager {
     private static PoolManager instance;

@@ -5,6 +5,10 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.ozu.platformrunner.entities.*;
+import com.ozu.platformrunner.entities.enemies.Enemy;
+import com.ozu.platformrunner.entities.enemies.PatrollingEnemy;
+import com.ozu.platformrunner.entities.projectiles.Arrow;
+import com.ozu.platformrunner.entities.projectiles.Bullet;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory.EnemyType;
 import com.ozu.platformrunner.patterns.memento.*;
@@ -21,7 +25,7 @@ public class SaveManager {
 
     // YENİ: TAM oyun durumu yakalama
     public GameStateMemento createMemento(Player player, Array<Enemy> enemies,
-                                           Array<Bullet> bullets, Array<Arrow> arrows, Array<Platform> platforms) {
+                                          Array<Bullet> bullets, Array<Arrow> arrows, Array<Platform> platforms) {
         GameStateMemento memento = new GameStateMemento();
 
         // Player temel veriler

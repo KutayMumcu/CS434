@@ -1,4 +1,6 @@
-package com.ozu.platformrunner.entities;
+package com.ozu.platformrunner.entities.enemies;
+
+import com.ozu.platformrunner.entities.Player;
 
 public class ChasingEnemy extends Enemy {
 

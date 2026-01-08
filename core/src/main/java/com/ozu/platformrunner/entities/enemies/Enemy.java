@@ -1,4 +1,4 @@
-package com.ozu.platformrunner.entities;
+package com.ozu.platformrunner.entities.enemies;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.ozu.platformrunner.entities.Platform;
+import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.ResourceManager;
 import com.badlogic.gdx.math.Intersector;
 

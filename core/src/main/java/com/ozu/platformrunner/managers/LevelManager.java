@@ -1,7 +1,7 @@
 package com.ozu.platformrunner.managers;
 
 import com.badlogic.gdx.utils.Array;
-import com.ozu.platformrunner.entities.Enemy;
+import com.ozu.platformrunner.entities.enemies.Enemy;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.patterns.factory.EnemyFactory;
 

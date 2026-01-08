@@ -1,4 +1,6 @@
-package com.ozu.platformrunner.entities;
+package com.ozu.platformrunner.entities.enemies;
+
+import com.ozu.platformrunner.entities.Player;
 
 public class PatrollingEnemy extends Enemy {
     private float movementRange = 200f; // Ne kadar gidip dönecek

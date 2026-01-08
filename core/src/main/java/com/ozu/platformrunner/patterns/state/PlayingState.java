@@ -1,6 +1,6 @@
 package com.ozu.platformrunner.patterns.state;
 
-import com.ozu.platformrunner.GameScreen;
+import com.ozu.platformrunner.screens.GameScreen;
 
 public class PlayingState implements GameScreenState {
 

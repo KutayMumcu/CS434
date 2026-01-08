@@ -1,8 +1,7 @@
 package com.ozu.platformrunner.patterns.state;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.ozu.platformrunner.GameScreen;
+import com.ozu.platformrunner.screens.GameScreen;
 import com.ozu.platformrunner.ui.PauseMenuOverlay;
 
 public class PausedState implements GameScreenState {

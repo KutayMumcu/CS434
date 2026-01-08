@@ -1,6 +1,9 @@
-package com.ozu.platformrunner.entities;
+package com.ozu.platformrunner.entities.enemies;
 
 import com.badlogic.gdx.utils.Array;
+import com.ozu.platformrunner.entities.projectiles.Arrow;
+import com.ozu.platformrunner.entities.Platform;
+import com.ozu.platformrunner.entities.Player;
 import com.ozu.platformrunner.managers.PoolManager;
 
 public class BossEnemy extends Enemy {

@@ -1,9 +1,9 @@
 package com.ozu.platformrunner.patterns.strategy;
 
 import com.badlogic.gdx.utils.Array;
-import com.ozu.platformrunner.GameConstants;
-import com.ozu.platformrunner.entities.Bullet;
-import com.ozu.platformrunner.entities.Enemy;
+import com.ozu.platformrunner.utils.GameConstants;
+import com.ozu.platformrunner.entities.projectiles.Bullet;
+import com.ozu.platformrunner.entities.enemies.Enemy;
 import com.ozu.platformrunner.entities.Player;
 
 public class SwordStrategy implements AttackStrategy {

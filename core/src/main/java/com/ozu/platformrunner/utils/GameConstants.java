@@ -1,4 +1,4 @@
-package com.ozu.platformrunner;
+package com.ozu.platformrunner.utils;
 
 /**
  * Game-wide constants for balancing and configuration.

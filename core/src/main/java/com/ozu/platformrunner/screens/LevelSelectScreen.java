@@ -1,4 +1,4 @@
-package com.ozu.platformrunner;
+package com.ozu.platformrunner.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.ozu.platformrunner.MainGame;
 
 public class LevelSelectScreen implements Screen {
     private final MainGame game;

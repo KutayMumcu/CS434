@@ -2,7 +2,9 @@ package com.ozu.platformrunner.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.ozu.platformrunner.GameConstants;
+import com.ozu.platformrunner.utils.GameConstants;
+import com.ozu.platformrunner.entities.enemies.Enemy;
+import com.ozu.platformrunner.entities.projectiles.Bullet;
 import com.ozu.platformrunner.patterns.observer.GameEvent;
 import com.ozu.platformrunner.patterns.observer.GameObserver;
 import com.ozu.platformrunner.patterns.state.IdleState;

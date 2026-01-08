@@ -1,9 +1,9 @@
 package com.ozu.platformrunner.patterns.factory;
 
-import com.ozu.platformrunner.entities.BossEnemy;
-import com.ozu.platformrunner.entities.ChasingEnemy;
-import com.ozu.platformrunner.entities.Enemy;
-import com.ozu.platformrunner.entities.PatrollingEnemy;
+import com.ozu.platformrunner.entities.enemies.BossEnemy;
+import com.ozu.platformrunner.entities.enemies.ChasingEnemy;
+import com.ozu.platformrunner.entities.enemies.Enemy;
+import com.ozu.platformrunner.entities.enemies.PatrollingEnemy;
 
 public class EnemyFactory {
 
