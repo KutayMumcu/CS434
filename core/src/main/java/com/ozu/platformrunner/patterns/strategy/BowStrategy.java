@@ -18,4 +18,9 @@ public class BowStrategy implements AttackStrategy {
         b.init(startX, player.getBounds().y + 10, dir);
         bullets.add(b);
     }
+
+    @Override
+    public WeaponType getWeaponType() {
+        return WeaponType.RANGED;
+    }
 }

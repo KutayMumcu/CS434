@@ -7,4 +7,5 @@ import com.ozu.platformrunner.entities.Player;
 
 public interface AttackStrategy {
     void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets);
+    WeaponType getWeaponType();
 }

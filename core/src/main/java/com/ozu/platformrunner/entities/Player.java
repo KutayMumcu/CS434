@@ -19,6 +19,7 @@ import com.ozu.platformrunner.patterns.state.PlayerState;
 import com.ozu.platformrunner.patterns.strategy.AttackStrategy;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
+import com.ozu.platformrunner.patterns.strategy.WeaponType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,8 +146,7 @@ public class Player {
 
         // Animation Priority Logic
         if (isAttacking) {
-            String strategyName = attackStrategy.getClass().getSimpleName();
-            if (strategyName.contains("Bow")) {
+            if (attackStrategy.getWeaponType() == WeaponType.RANGED) {
                 rangeAnim.setPlayMode(Animation.PlayMode.NORMAL);
                 currentFrame = rangeAnim.getKeyFrame(stateTime);
             } else {

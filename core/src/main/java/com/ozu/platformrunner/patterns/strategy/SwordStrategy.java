@@ -27,4 +27,9 @@ public class SwordStrategy implements AttackStrategy {
             }
         }
     }
+
+    @Override
+    public WeaponType getWeaponType() {
+        return WeaponType.MELEE;
+    }
 }
