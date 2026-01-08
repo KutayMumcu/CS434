@@ -14,29 +14,23 @@ import com.ozu.platformrunner.managers.ResourceManager;
 
 public abstract class Enemy {
     protected Rectangle bounds;
-    protected float speed = 100f;
-
-    // Fizik
     protected Vector2 velocity;
     protected boolean onGround = false;
-    protected static final float GRAVITY = -800f;
-    protected static final float JUMP_VELOCITY = 400f; // Boss zıplaması için gerekli
 
-    // Zıplama ve AI Sistemi (BossEnemy için gerekli)
+    protected float speed = 100f;
+    protected static final float GRAVITY = -800f;
+    protected static final float JUMP_VELOCITY = 400f;
+
     protected float jumpCooldown = 1.0f;
     protected float jumpCooldownTimer = 0f;
-    private Array<Platform> currentPlatforms; // AI kontrolleri için platformları tutar
+    private Array<Platform> currentPlatforms;
 
-    // Can Sistemi
     protected int maxHealth = 30;
     protected int currentHealth;
 
-    // Görseller
     protected Texture textureRight;
     protected Texture textureLeft;
     protected Texture currentTexture;
-
-    // Can Barı
     private static Texture healthBarTexture;
 
     public Enemy(float x, float y, float width, float height) {
@@ -44,14 +38,11 @@ public abstract class Enemy {
         this.velocity = new Vector2(0, 0);
         this.currentHealth = maxHealth;
 
-        // Textureları Yükle
         textureRight = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_RIGHT);
         textureLeft = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_LEFT);
-        currentTexture = textureRight; // Varsayılan
+        currentTexture = textureRight;
 
-        if (healthBarTexture == null) {
-            createHealthBarTexture();
-        }
+        if (healthBarTexture == null) createHealthBarTexture();
     }
 
     private void createHealthBarTexture() {
@@ -63,27 +54,17 @@ public abstract class Enemy {
     }
 
     public void update(float delta, Player player, Array<Platform> platforms) {
-        // Platformları kaydet (AI metotları için gerekli)
         this.currentPlatforms = platforms;
+        if (jumpCooldownTimer > 0) jumpCooldownTimer -= delta;
 
-        // Zıplama süresini güncelle
-        if (jumpCooldownTimer > 0) {
-            jumpCooldownTimer -= delta;
-        }
-
-        // 1. Yerçekimi
-        if (!onGround) {
-            velocity.y += GRAVITY * delta;
-        }
-
-        // 2. Alt Sınıf Hareket Mantığı
+        // Physics & Behavior
+        if (!onGround) velocity.y += GRAVITY * delta;
         moveBehavior(delta, player);
 
-        // 3. Pozisyon Güncelleme
         bounds.x += velocity.x * delta;
         bounds.y += velocity.y * delta;
 
-        // 4. Platform Çarpışma Kontrolü
+        // Collision
         onGround = false;
         for (Platform platform : platforms) {
             if (Intersector.overlaps(bounds, platform.getBounds())) {
@@ -95,15 +76,12 @@ public abstract class Enemy {
             }
         }
 
-        // Zemin kontrolü
-        if (bounds.y < -50) {
-            currentHealth = 0;
-        }
+        if (bounds.y < -50) currentHealth = 0;
     }
 
     protected abstract void moveBehavior(float delta, Player player);
 
-    // --- HELPER METOTLAR (BossEnemy ve Akıllı Düşmanlar İçin) ---
+    // --- AI Helper Methods ---
 
     protected void jump() {
         if (onGround && jumpCooldownTimer <= 0) {
@@ -135,41 +113,34 @@ public abstract class Enemy {
             Rectangle pBounds = platform.getBounds();
             if (checkX >= pBounds.x && checkX <= pBounds.x + pBounds.width &&
                 checkY >= pBounds.y - 20 && checkY <= pBounds.y + pBounds.height) {
-                return false; // Zemin var, kenar değil
+                return false; // Ground exists
             }
         }
-        return true; // Kenar var (Düşülecek yer)
+        return true; // Edge detected
     }
 
-    protected Array<Platform> getPlatforms() {
-        return currentPlatforms;
-    }
+    protected Array<Platform> getPlatforms() { return currentPlatforms; }
 
-    // --- ÇİZİM VE DİĞERLERİ ---
+    // --- Rendering & Stats ---
 
     public void draw(SpriteBatch batch) {
-        if (velocity.x > 0) {
-            currentTexture = textureRight;
-        } else if (velocity.x < 0) {
-            currentTexture = textureLeft;
-        }
+        if (velocity.x > 0) currentTexture = textureRight;
+        else if (velocity.x < 0) currentTexture = textureLeft;
 
         batch.draw(currentTexture, bounds.x, bounds.y, bounds.width, bounds.height);
         drawHealthBar(batch);
     }
 
     private void drawHealthBar(SpriteBatch batch) {
-        float barWidth = bounds.width;
-        float barHeight = 5;
         float barX = bounds.x;
         float barY = bounds.y + bounds.height + 5;
 
         batch.setColor(Color.RED);
-        batch.draw(healthBarTexture, barX, barY, barWidth, barHeight);
+        batch.draw(healthBarTexture, barX, barY, bounds.width, 5);
 
         float healthPercentage = (float) currentHealth / maxHealth;
         batch.setColor(Color.GREEN);
-        batch.draw(healthBarTexture, barX, barY, barWidth * healthPercentage, barHeight);
+        batch.draw(healthBarTexture, barX, barY, bounds.width * healthPercentage, 5);
 
         batch.setColor(Color.WHITE);
     }
@@ -179,30 +150,16 @@ public abstract class Enemy {
         if (currentHealth < 0) currentHealth = 0;
     }
 
-    public boolean isDead() {
-        return currentHealth <= 0;
-    }
-
+    public boolean isDead() { return currentHealth <= 0; }
     public Rectangle getBounds() { return bounds; }
+    public Vector2 getVelocity() { return velocity; }
+    public int getCurrentHealth() { return currentHealth; }
+    public void setHealth(int health) { this.currentHealth = health; }
 
     public static void disposeStaticResources() {
         if (healthBarTexture != null) {
             healthBarTexture.dispose();
             healthBarTexture = null;
         }
-    }
-
-    // --- SaveManager İçin Gerekli Metotlar ---
-
-    public Vector2 getVelocity() {
-        return velocity;
-    }
-
-    public int getCurrentHealth() {
-        return currentHealth;
-    }
-
-    public void setHealth(int health) {
-        this.currentHealth = health;
     }
 }

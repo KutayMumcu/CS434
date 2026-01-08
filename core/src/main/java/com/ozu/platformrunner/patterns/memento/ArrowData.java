@@ -6,6 +6,5 @@ public class ArrowData {
     public int direction;
     public boolean active;
 
-    // JSON serialization için boş constructor
     public ArrowData() {}
 }

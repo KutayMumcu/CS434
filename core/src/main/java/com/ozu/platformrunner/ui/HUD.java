@@ -15,13 +15,12 @@ public class HUD implements GameObserver {
     private Label levelLabel;
 
     public HUD(Stage stage) {
-        // --- Tablo Kurulumu ---
+        // Setup Table for Layout (Top alignment)
         Table table = new Table();
         table.setFillParent(true);
-        table.top(); // Tabloyu en tepeye yasla (UI aşağı kaymasın)
+        table.top();
         stage.addActor(table);
 
-        // --- Stiller ---
         BitmapFont font = new BitmapFont();
         Label.LabelStyle style = new Label.LabelStyle(font, Color.WHITE);
 
@@ -35,22 +34,19 @@ public class HUD implements GameObserver {
         levelLabel = new Label("Level: 1", style);
         levelLabel.setFontScale(1.5f);
 
-        // --- DÜZENLEME ---
-
-        // 1. SATIR: Sol tarafta Health, Sağ taraf BOŞ (Menu butonu için)
+        // Row 1: Health (Left) | Empty (Right - Reserved for Menu Button)
         table.add(healthLabel).left().padLeft(20).padTop(20).expandX();
-        table.add().expandX(); // Sağ üst köşeyi Menu butonuna rezerve et
+        table.add().expandX();
 
-        table.row(); // Alt satıra geç
+        table.row();
 
-        // 2. SATIR: Solda Score, Sağda Level
+        // Row 2: Score (Left) | Level (Right)
         table.add(scoreLabel).left().padLeft(20).padTop(10);
         table.add(levelLabel).right().padRight(20).padTop(10);
     }
 
     @Override
     public void onNotify(Player player, GameEvent event) {
-        // ARTIK DOĞRUDAN Player ALIYORUZ (Hata buradaydı)
         switch (event) {
             case HEALTH_CHANGED:
                 healthLabel.setText("Health: " + player.getHealth());

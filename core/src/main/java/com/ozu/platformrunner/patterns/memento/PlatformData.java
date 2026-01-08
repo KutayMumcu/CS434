@@ -6,6 +6,5 @@ public class PlatformData {
     public float width;
     public float height;
 
-    // JSON serialization için boş constructor
     public PlatformData() {}
 }

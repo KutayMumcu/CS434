@@ -40,7 +40,7 @@ public class Arrow implements Pool.Poolable {
 
         bounds.x += speed * direction * delta;
 
-        // Deactivate when far off-screen (increased range to fix shooting issues at map edges)
+        // Extended range check for arrows
         if (bounds.x < -100 || bounds.x > 2500) {
             active = false;
         }
@@ -48,8 +48,7 @@ public class Arrow implements Pool.Poolable {
 
     public void draw(SpriteBatch batch) {
         if (active) {
-            // Draw with yellow tint to distinguish from bullets
-            batch.setColor(1f, 1f, 0.6f, 1f);
+            batch.setColor(1f, 1f, 0.6f, 1f); // Yellow tint
             batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
             batch.setColor(Color.WHITE);
         }

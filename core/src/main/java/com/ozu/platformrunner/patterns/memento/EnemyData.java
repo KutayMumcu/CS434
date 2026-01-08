@@ -1,17 +1,14 @@
 package com.ozu.platformrunner.patterns.memento;
 
 public class EnemyData {
-    public String type;  // "PatrollingEnemy" or "ChasingEnemy"
-    public float x;
-    public float y;
+    public String type;
+    public float x, y;
+    public float velocityX, velocityY;
     public int currentHealth;
-    public float velocityX;
-    public float velocityY;
 
-    // PatrollingEnemy specific fields
+    // PatrollingEnemy specific
     public float startX;
     public int direction;
 
-    // JSON serialization için boş constructor
     public EnemyData() {}
 }

@@ -43,13 +43,8 @@ public class VictoryScreen implements Screen {
     private void setupUI() {
         BitmapFont font = new BitmapFont();
         font.getData().setScale(2f);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(font, Color.YELLOW);
 
-        // Label style
-        Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
-        labelStyle.fontColor = Color.YELLOW;
-
-        // Button style
         BitmapFont buttonFont = new BitmapFont();
         buttonFont.getData().setScale(1.5f);
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
@@ -57,32 +52,21 @@ public class VictoryScreen implements Screen {
         buttonStyle.fontColor = Color.WHITE;
         buttonStyle.overFontColor = Color.YELLOW;
 
-        // Create table for layout
         Table table = new Table();
         table.setFillParent(true);
         table.center();
 
-        // Victory title
         Label titleLabel = new Label("LEVEL COMPLETE!", labelStyle);
         titleLabel.setFontScale(1.5f);
         titleLabel.setColor(Color.GREEN);
         table.add(titleLabel).padBottom(40).row();
 
-        // Stats
-        Label levelLabel = new Label("Level: " + currentLevel, labelStyle);
-        table.add(levelLabel).padBottom(20).row();
+        table.add(new Label("Level: " + currentLevel, labelStyle)).padBottom(20).row();
+        table.add(new Label("Score: " + score, labelStyle)).padBottom(20).row();
+        table.add(new Label("Health Remaining: " + healthRemaining, labelStyle)).padBottom(20).row();
+        table.add(new Label(String.format("Time: %.1f seconds", timeTaken), labelStyle)).padBottom(50).row();
 
-        Label scoreLabel = new Label("Score: " + score, labelStyle);
-        table.add(scoreLabel).padBottom(20).row();
-
-        Label healthLabel = new Label("Health Remaining: " + healthRemaining, labelStyle);
-        table.add(healthLabel).padBottom(20).row();
-
-        Label timeLabel = new Label(String.format("Time: %.1f seconds", timeTaken), labelStyle);
-        table.add(timeLabel).padBottom(50).row();
-
-        // Buttons
-        // Only show "NEXT LEVEL" button if not on final level (7)
+        // Check if next level exists (Assuming max 7 levels)
         if (currentLevel < 7) {
             TextButton nextLevelButton = new TextButton("NEXT LEVEL", buttonStyle);
             nextLevelButton.addListener(new ClickListener() {
@@ -95,7 +79,6 @@ public class VictoryScreen implements Screen {
             });
             table.add(nextLevelButton).width(200).height(50).padBottom(20).row();
         } else {
-            // Final level - show congratulations message
             Label congrats = new Label("GAME COMPLETED!", labelStyle);
             congrats.setColor(Color.GOLD);
             table.add(congrats).padBottom(20).row();
@@ -117,24 +100,14 @@ public class VictoryScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.3f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         stage.act(delta);
         stage.draw();
     }
 
-    @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-    }
-
+    @Override public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
+    @Override public void dispose() { stage.dispose(); batch.dispose(); }
     @Override public void show() {}
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
-
-    @Override
-    public void dispose() {
-        stage.dispose();
-        batch.dispose();
-    }
 }

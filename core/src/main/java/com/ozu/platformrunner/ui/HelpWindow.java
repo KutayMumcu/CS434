@@ -15,17 +15,16 @@ import com.badlogic.gdx.utils.Align;
 public class HelpWindow extends Table {
 
     public HelpWindow(Label.LabelStyle labelStyle, TextButton.TextButtonStyle buttonStyle) {
-        // Tablo ayarları
         this.setFillParent(true);
         createBackground();
 
-        // Başlık
+        // Title
         Label title = new Label("CONTROLS", labelStyle);
         title.setFontScale(2.5f);
         this.add(title).padBottom(30).colspan(2);
         this.row();
 
-        // İçerikler
+        // Control List
         addControlRow("Arrows", "Move Left / Right", labelStyle);
         addControlRow("Space", "Jump", labelStyle);
         addControlRow("Z", "Attack", labelStyle);
@@ -34,21 +33,23 @@ public class HelpWindow extends Table {
         addControlRow("P", "Power Up (Double Shot)", labelStyle);
         addControlRow("F5", "Quick Save", labelStyle);
         addControlRow("F9", "Quick Load", labelStyle);
+        addControlRow("F1", "Debug Mode", labelStyle);
+        addControlRow("ESC", "Pause Game", labelStyle);
 
-        // Kapat Butonu
+        // Close Button
         TextButton closeButton = new TextButton("CLOSE", buttonStyle);
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                remove(); // Kendini sahneden siler
+                remove();
             }
         });
 
         this.add(closeButton).colspan(2).padTop(40);
     }
 
-    // Kod ile yarı saydam siyah arka plan oluşturma
     private void createBackground() {
+        // Generate semi-transparent black background programmatically
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(0, 0, 0, 0.85f);
         pixmap.fill();
@@ -58,7 +59,6 @@ public class HelpWindow extends Table {
         pixmap.dispose();
     }
 
-    // Satır ekleme yardımcısı
     private void addControlRow(String key, String action, Label.LabelStyle style) {
         Label keyLabel = new Label(key, style);
         keyLabel.setColor(Color.YELLOW);

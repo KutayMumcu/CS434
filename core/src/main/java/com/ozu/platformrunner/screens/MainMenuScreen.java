@@ -13,13 +13,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.ozu.platformrunner.MainGame;
-import com.ozu.platformrunner.ui.HelpWindow; // Yeni sınıfımızı import ettik
+import com.ozu.platformrunner.ui.HelpWindow;
 
 public class MainMenuScreen implements Screen {
     private final MainGame game;
     private Stage stage;
 
-    // Stiller (Diğer sınıflara da geçebilmek için burada tanımlı)
     private BitmapFont font;
     private Label.LabelStyle labelStyle;
     private TextButton.TextButtonStyle buttonStyle;
@@ -38,6 +37,7 @@ public class MainMenuScreen implements Screen {
         font = new BitmapFont();
         font.getData().setScale(2);
         labelStyle = new Label.LabelStyle(font, Color.WHITE);
+
         buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = font;
         buttonStyle.fontColor = Color.WHITE;
@@ -50,9 +50,9 @@ public class MainMenuScreen implements Screen {
         stage.addActor(table);
 
         Label titleLabel = new Label("PLATFORM RUNNER", labelStyle);
-        table.add(titleLabel).padBottom(50);
-        table.row();
+        table.add(titleLabel).padBottom(50).row();
 
+        // Play Button
         TextButton playButton = new TextButton("PLAY", buttonStyle);
         playButton.addListener(new ClickListener() {
             @Override
@@ -60,9 +60,9 @@ public class MainMenuScreen implements Screen {
                 game.setScreen(new LevelSelectScreen(game));
             }
         });
-        table.add(playButton).padBottom(20);
-        table.row();
+        table.add(playButton).padBottom(20).row();
 
+        // Load Game Button
         TextButton loadButton = new TextButton("LOAD GAME", buttonStyle);
         loadButton.addListener(new ClickListener() {
             @Override
@@ -74,9 +74,7 @@ public class MainMenuScreen implements Screen {
     }
 
     private void setupHelpButton() {
-        // --- SORU İŞARETİ BUTONU ---
         TextButton helpButton = new TextButton("?", buttonStyle);
-
         helpButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -84,18 +82,11 @@ public class MainMenuScreen implements Screen {
             }
         });
 
-        // --- YENİ YÖNTEM: UI TABLOSU İLE HİZALAMA ---
-        // Manuel setPosition yerine bir Tablo kullanıyoruz.
-        // Bu tablo ekran boyutunu takip eder ve içindekileri otomatik hizalar.
-
+        // Anchor button to Top-Right using a layout table
         Table uiTable = new Table();
-        uiTable.setFillParent(true); // Tablo ekranın tamamını kaplasın
-        uiTable.top().right();       // İçeriği SAĞ ÜST köşeye yasla
-
-        // Butonu tabloya ekle ve kenarlardan biraz boşluk (pad) bırak
+        uiTable.setFillParent(true);
+        uiTable.top().right();
         uiTable.add(helpButton).pad(20);
-
-        // Tabloyu sahneye ekle
         stage.addActor(uiTable);
     }
 

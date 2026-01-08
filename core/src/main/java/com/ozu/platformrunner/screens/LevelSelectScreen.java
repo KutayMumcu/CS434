@@ -14,11 +14,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.ozu.platformrunner.MainGame;
 
 public class LevelSelectScreen implements Screen {
-    private final MainGame game;
-    private Stage stage;
+    private final Stage stage;
 
-    public LevelSelectScreen(MainGame game) {
-        this.game = game;
+    public LevelSelectScreen(final MainGame game) {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
@@ -34,83 +32,33 @@ public class LevelSelectScreen implements Screen {
         table.center();
         stage.addActor(table);
 
-        // LEVEL 1
-        TextButton lvl1 = new TextButton("LEVEL 1", buttonStyle);
-        lvl1.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 1));
-            }
-        });
-        table.add(lvl1).width(200).height(50).pad(8);
+        // Create buttons for Levels 1-7 dynamically
+        for (int i = 1; i <= 7; i++) {
+            final int levelId = i;
+            TextButton levelBtn = new TextButton("LEVEL " + levelId, buttonStyle);
 
-        // LEVEL 2
-        TextButton lvl2 = new TextButton("LEVEL 2", buttonStyle);
-        lvl2.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 2));
-            }
-        });
-        table.add(lvl2).width(200).height(50).pad(8);
-        table.row();
+            levelBtn.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    game.setScreen(new GameScreen(game, levelId));
+                }
+            });
 
-        // LEVEL 3
-        TextButton lvl3 = new TextButton("LEVEL 3", buttonStyle);
-        lvl3.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 3));
+            // Layout logic: 2 buttons per row, Level 7 centered at bottom
+            if (levelId == 7) {
+                table.add(levelBtn).width(200).height(50).pad(8).colspan(2);
+            } else {
+                table.add(levelBtn).width(200).height(50).pad(8);
+                if (levelId % 2 == 0) {
+                    table.row();
+                }
             }
-        });
-        table.add(lvl3).width(200).height(50).pad(8);
-
-        // LEVEL 4
-        TextButton lvl4 = new TextButton("LEVEL 4", buttonStyle);
-        lvl4.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 4));
-            }
-        });
-        table.add(lvl4).width(200).height(50).pad(8);
-        table.row();
-
-        // LEVEL 5
-        TextButton lvl5 = new TextButton("LEVEL 5", buttonStyle);
-        lvl5.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 5));
-            }
-        });
-        table.add(lvl5).width(200).height(50).pad(8);
-
-        // LEVEL 6
-        TextButton lvl6 = new TextButton("LEVEL 6", buttonStyle);
-        lvl6.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 6));
-            }
-        });
-        table.add(lvl6).width(200).height(50).pad(8);
-        table.row();
-
-        // LEVEL 7
-        TextButton lvl7 = new TextButton("LEVEL 7", buttonStyle);
-        lvl7.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game, 7));
-            }
-        });
-        table.add(lvl7).width(200).height(50).pad(8).colspan(2);
+        }
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1); // Daha koyu arka plan
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act();
         stage.draw();

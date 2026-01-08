@@ -6,6 +6,5 @@ public class BulletData {
     public int direction;
     public boolean active;
 
-    // JSON serialization için boş constructor
     public BulletData() {}
 }

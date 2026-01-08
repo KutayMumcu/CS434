@@ -7,21 +7,19 @@ public class ResourceManager {
     private static ResourceManager instance;
     public final AssetManager assetManager;
 
-    // --- PLAYER ANİMASYON DOSYALARI ---
+    // Player Textures
     public static final String TEXTURE_IDLE = "Idle.png";
     public static final String TEXTURE_RUN = "Run.png";
     public static final String TEXTURE_ATTACK = "Attack.png";
     public static final String TEXTURE_LIGHTBALL = "LightBall.png";
     public static final String TEXTURE_JUMP = "Jump.png";
 
-    // --- DÜŞMAN GÖRSELLERİ ---
+    // Enemy Textures
     public static final String TEXTURE_ENEMY_RIGHT = "enemyRight.png";
     public static final String TEXTURE_ENEMY_LEFT = "enemyLeft.png";
 
-    // --- DİĞERLERİ ---
+    // Environment Textures
     public static final String TEXTURE_PLATFORM = "platform.png";
-
-    // NOT: char.png ARTIK YOK. SİLDİK.
 
     private ResourceManager() {
         assetManager = new AssetManager();
@@ -35,22 +33,19 @@ public class ResourceManager {
     }
 
     public void loadAllResources() {
-        // Player Animasyonları
+        // Load Player
         assetManager.load(TEXTURE_IDLE, Texture.class);
         assetManager.load(TEXTURE_RUN, Texture.class);
         assetManager.load(TEXTURE_ATTACK, Texture.class);
         assetManager.load(TEXTURE_LIGHTBALL, Texture.class);
         assetManager.load(TEXTURE_JUMP, Texture.class);
 
-        // Düşman Görselleri
+        // Load Enemies
         assetManager.load(TEXTURE_ENEMY_RIGHT, Texture.class);
         assetManager.load(TEXTURE_ENEMY_LEFT, Texture.class);
 
-        // Diğerleri
+        // Load Environment
         assetManager.load(TEXTURE_PLATFORM, Texture.class);
-
-        // char.png YÜKLEME SATIRINI TAMAMEN KALDIRDIK.
-        // assetManager.load("char.png", Texture.class); <--- BU SATIR ARTIK YOK
 
         assetManager.finishLoading();
     }

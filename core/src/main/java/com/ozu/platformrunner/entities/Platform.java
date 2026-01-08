@@ -13,23 +13,23 @@ public class Platform {
     public Platform(float x, float y, float width, float height) {
         bounds = new Rectangle(x, y, width, height);
 
-        // Create a simple platform texture if not already created
+        // Generate texture if not exists
         if (platformTexture == null) {
             Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
-            // Brown platform color with border
             pixmap.setColor(new Color(0.4f, 0.3f, 0.2f, 1f));
             pixmap.fill();
-            // Add border
+
+            // Add border details
             pixmap.setColor(new Color(0.3f, 0.2f, 0.1f, 1f));
             pixmap.drawRectangle(0, 0, 64, 64);
             pixmap.drawRectangle(1, 1, 62, 62);
+
             platformTexture = new Texture(pixmap);
             pixmap.dispose();
         }
     }
 
     public void draw(SpriteBatch batch) {
-        // Draw platform with tiled texture
         float tileSize = 64f;
         int tilesX = (int) Math.ceil(bounds.width / tileSize);
         int tilesY = (int) Math.ceil(bounds.height / tileSize);
@@ -45,14 +45,8 @@ public class Platform {
         }
     }
 
-    public Rectangle getBounds() {
-        return bounds;
-    }
+    public Rectangle getBounds() { return bounds; }
 
-    /**
-     * Dispose static resources - call this when game exits
-     * Prevents memory leaks from static textures
-     */
     public static void disposeStaticResources() {
         if (platformTexture != null) {
             platformTexture.dispose();

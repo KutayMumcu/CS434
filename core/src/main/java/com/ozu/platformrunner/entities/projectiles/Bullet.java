@@ -3,28 +3,23 @@ package com.ozu.platformrunner.entities.projectiles;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.Pool; // Poolable importu
+import com.badlogic.gdx.utils.Pool;
 import com.ozu.platformrunner.utils.GameConstants;
 import com.ozu.platformrunner.managers.ResourceManager;
 
-// Pool.Poolable implemente ediyoruz
 public class Bullet implements Pool.Poolable {
     private final Rectangle bounds;
     private float speed = GameConstants.BULLET_SPEED;
     private int direction;
     private Texture texture;
-    public boolean active; // Public yaptık ki dışarıdan erişip kontrol edelim
+    public boolean active;
 
-    // Constructor artık parametre almamalı (veya varsayılan değerler almalı)
-    // Çünkü nesne bir kere üretilecek, sonra init() ile ayarlanacak.
     public Bullet() {
         this.bounds = new Rectangle(0, 0, 10, 5);
         this.active = false;
-        // Texture'ı burada alabiliriz, değişmiyor sonuçta
         this.texture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_PLATFORM);
     }
 
-    // Mermiyi havuza geri koymadan önce temizleyen metot
     @Override
     public void reset() {
         this.bounds.setPosition(0, 0);
@@ -32,7 +27,6 @@ public class Bullet implements Pool.Poolable {
         this.active = false;
     }
 
-    // Mermiyi havuzdan aldığımızda özelliklerini atamak için (Constructor yerine bunu kullanacağız)
     public void init(float x, float y, int direction) {
         this.bounds.setPosition(x, y);
         this.direction = direction;
@@ -40,11 +34,11 @@ public class Bullet implements Pool.Poolable {
     }
 
     public void update(float delta) {
-        if (!active) return; // Aktif değilse işlem yapma
+        if (!active) return;
 
         bounds.x += speed * direction * delta;
 
-        // Ekrandan çıkınca pasife çek (Pool'a iade edilmeye hazır)
+        // Despawn logic
         if (bounds.x < -GameConstants.PROJECTILE_DESPAWN_MARGIN ||
             bounds.x > GameConstants.MAP_LIMIT_X + GameConstants.PROJECTILE_DESPAWN_MARGIN) {
             active = false;

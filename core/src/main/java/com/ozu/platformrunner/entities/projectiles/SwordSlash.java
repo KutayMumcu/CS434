@@ -10,7 +10,7 @@ public class SwordSlash {
     private float width, height;
     private float duration;
     private float elapsedTime;
-    private int direction; // 1 for right, -1 for left
+    private int direction;
     private static Texture slashTexture;
 
     public SwordSlash(float x, float y, int direction) {
@@ -19,10 +19,10 @@ public class SwordSlash {
         this.width = 60;
         this.height = 40;
         this.direction = direction;
-        this.duration = 0.2f; // Slash lasts 0.2 seconds
+        this.duration = 0.2f;
         this.elapsedTime = 0;
 
-        // Create slash texture if not already created
+        // Generate texture if not exists
         if (slashTexture == null) {
             Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
             pixmap.setColor(Color.WHITE);
@@ -34,7 +34,6 @@ public class SwordSlash {
 
     public void update(float delta) {
         elapsedTime += delta;
-        // Animate the slash moving forward
         x += direction * 200 * delta;
     }
 
@@ -43,23 +42,12 @@ public class SwordSlash {
     }
 
     public void draw(SpriteBatch batch) {
-        // Calculate alpha based on time (fade out)
         float alpha = 1.0f - (elapsedTime / duration);
-
-        // Draw as a white slash effect
         batch.setColor(1, 1, 1, alpha);
-
-        // Simple rectangular slash
         batch.draw(slashTexture, x, y, width, height);
-
-        // Reset color
         batch.setColor(Color.WHITE);
     }
 
-    /**
-     * Dispose static resources - call this when game exits
-     * Prevents memory leaks from static textures
-     */
     public static void disposeStaticResources() {
         if (slashTexture != null) {
             slashTexture.dispose();

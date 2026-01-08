@@ -9,31 +9,27 @@ public class PausedState implements GameScreenState {
 
     @Override
     public void enter(GameScreen screen) {
-        System.out.println("PausedState: Oyun duraklatıldı");
         pauseMenu = new PauseMenuOverlay(screen);
-        // Input processor'ı pause menü stage'ine ayarla
         Gdx.input.setInputProcessor(pauseMenu.getStage());
     }
 
     @Override
     public void update(GameScreen screen, float delta) {
-        // Oyun güncellemelerini DURDUR
-        // Sadece pause menüyü render et
+        // No updates during pause
     }
 
     @Override
     public void handleInput(GameScreen screen) {
-        // Input pause menü tarafından işleniyor
+        // Input handled by pause menu stage
     }
 
     @Override
     public void exit(GameScreen screen) {
-        System.out.println("PausedState: Oyun devam ediyor");
-        pauseMenu.dispose();
-        pauseMenu = null;
+        if (pauseMenu != null) {
+            pauseMenu.dispose();
+            pauseMenu = null;
+        }
     }
 
-    public PauseMenuOverlay getPauseMenu() {
-        return pauseMenu;
-    }
+    public PauseMenuOverlay getPauseMenu() { return pauseMenu; }
 }

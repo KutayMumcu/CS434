@@ -24,53 +24,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
-    // Görsel boyutu (64x64) ile Fizik boyutu (Örn: 20x50) farklı olacak
-    // ... (DRAW_WIDTH ve DRAW_HEIGHT aynen kalsın) ...
     private static final float DRAW_WIDTH = 64f;
     private static final float DRAW_HEIGHT = 64f;
-
-    // ... (HITBOX boyutları aynen kalsın) ...
     private static final float HITBOX_WIDTH = 25f;
     private static final float HITBOX_HEIGHT = 50f;
 
-    // --- DÜZELTME BURADA ---
-    // Görseli yatayda ortala ama dikeyde (Y ekseninde) AŞAĞI KAYDIRMA.
-    // drawOffsetY = 0 yaparsak görselin altı ile hitbox'ın altı eşitlenir.
-
+    // Alignment offsets
     private float drawOffsetX = (DRAW_WIDTH - HITBOX_WIDTH) / 2;
-    private float drawOffsetY = 0f; // ESKİSİ: (DRAW_HEIGHT - HITBOX_HEIGHT) / 2 idi.
+    private float drawOffsetY = 0f;
 
-    // NOT: Eğer bu sefer de karakter havada uçuyormuş gibi durursa (görselin altında boşluk varsa),
-    // bu değeri negatif yapabilirsin. Örn: -5f (Yukarı değil, aşağı boşluk payı kadar)
-
-    // Görseli hitbox'a göre ortalamak için kaydırma miktarı
-    // --- FİZİK SABİTLERİ ---
+    // Physics constants
     private static final float MOVE_SPEED = 200f;
     private static final float JUMP_VELOCITY = 450f;
     private static final float GRAVITY = -900f;
     private static final float MAP_WIDTH = 2000f;
 
-    // --- TEMEL BİLEŞENLER ---
     private final Rectangle bounds;
     private final Vector2 velocity;
     private boolean onGround;
-    private int facingDirection = 1; // 1: Sağ, -1: Sol
+    private int facingDirection = 1;
     private Vector2 knockbackVelocity;
 
-    // --- ANİMASYONLAR ---
+    // Animations
     private Animation<TextureRegion> idleAnim;
     private Animation<TextureRegion> runAnim;
-    private Animation<TextureRegion> attackAnim;    // Kılıç
-    private Animation<TextureRegion> rangeAnim;     // LightBall Atışı
+    private Animation<TextureRegion> attackAnim;
+    private Animation<TextureRegion> rangeAnim;
     private Animation<TextureRegion> jumpAnim;
 
-    private float stateTime = 0f; // Genel animasyon süresi
+    private float stateTime = 0f;
 
-    // --- DURUMLAR (State Logic) ---
+    // State Logic
     private boolean isAttacking = false;
-    private float attackAnimTimer = 0f; // Saldırı animasyonunun ne kadar süreceği
+    private float attackAnimTimer = 0f;
 
-    // --- DİĞER SİSTEMLER ---
     private PlayerState currentState;
     private AttackStrategy attackStrategy;
     private final List<GameObserver> observers;
@@ -81,7 +68,7 @@ public class Player {
     private float invulnerabilityTimer = 0f;
     private float attackCooldownTimer = 0f;
 
-    public Player(float x, float y, float width, float height) {
+    public Player(float x, float y) {
         bounds = new Rectangle(x, y, HITBOX_WIDTH, HITBOX_HEIGHT);
         velocity = new Vector2(0, 0);
         knockbackVelocity = new Vector2(0, 0);
@@ -90,28 +77,21 @@ public class Player {
         observers = new ArrayList<>();
         currentState = new IdleState();
         currentState.enter(this);
-        this.attackStrategy = new SwordStrategy(); // Varsayılan silah
+        this.attackStrategy = new SwordStrategy();
 
-        // --- ANİMASYONLARI YÜKLE ---
-        // createAnimation(DosyaAdı, SütunSayısı, Hız)
-        // NOT: İndirdiğin görsellerin kaç kare olduğunu buradaki rakamlarla güncelle!
+        // Load Animations
         idleAnim = createAnimation(ResourceManager.TEXTURE_IDLE, 7, 0.15f);
         runAnim = createAnimation(ResourceManager.TEXTURE_RUN, 8, 0.1f);
         jumpAnim = createAnimation(ResourceManager.TEXTURE_JUMP, 8, 0.1f);
-
-        // Saldırı animasyonları genelde daha hızlı olur (0.05f - 0.08f gibi)
         attackAnim = createAnimation(ResourceManager.TEXTURE_ATTACK, 10, 0.08f);
         rangeAnim = createAnimation(ResourceManager.TEXTURE_LIGHTBALL, 7, 0.08f);
     }
 
-    /**
-     * Yardımcı Metot: Sprite Sheet'i parçalayıp animasyon oluşturur.
-     */
     private Animation<TextureRegion> createAnimation(String textureName, int frameCols, float frameDuration) {
         Texture sheet = ResourceManager.getInstance().getTexture(textureName);
         TextureRegion[][] tmp = TextureRegion.split(sheet,
             sheet.getWidth() / frameCols,
-            sheet.getHeight() / 1); // Tek satır varsayıyoruz
+            sheet.getHeight() / 1);
 
         TextureRegion[] frames = new TextureRegion[frameCols];
         int index = 0;
@@ -125,15 +105,14 @@ public class Player {
         stateTime += delta;
         currentState.update(this, delta);
 
-        // Zamanlayıcılar
+        // Timers
         if (invulnerabilityTimer > 0) invulnerabilityTimer -= delta;
         if (attackCooldownTimer > 0) attackCooldownTimer -= delta;
 
-        // Saldırı animasyonu kontrolü
         if (isAttacking) {
             attackAnimTimer -= delta;
             if (attackAnimTimer <= 0) {
-                isAttacking = false; // Animasyon bitti
+                isAttacking = false;
             }
         }
 
@@ -142,8 +121,7 @@ public class Player {
             if (hurtTimer >= 0.2f) { isHurt = false; hurtTimer = 0f; }
         }
 
-        // --- FİZİK GÜNCELLEMELERİ ---
-        // Knockback
+        // Physics: Knockback
         if (knockbackVelocity.len() > 0) {
             bounds.x += knockbackVelocity.x * delta;
             bounds.y += knockbackVelocity.y * delta;
@@ -151,23 +129,21 @@ public class Player {
             if (knockbackVelocity.len() < 10f) knockbackVelocity.set(0, 0);
         }
 
-        // Yerçekimi ve Hareket
+        // Physics: Gravity & Movement
         if (!onGround) velocity.y += GRAVITY * delta;
         bounds.x += velocity.x * delta;
         bounds.y += velocity.y * delta;
 
-        // Sınırlar
+        // Boundaries
         if (bounds.x < 0) { bounds.x = 0; velocity.x = 0; }
         if (bounds.x > MAP_WIDTH - bounds.width) { bounds.x = MAP_WIDTH - bounds.width; velocity.x = 0; }
-        if (bounds.y < -50) takeDamage(1000);
+        if (bounds.y < -50) takeDamage(1000); // Fall death
     }
 
     public void draw(SpriteBatch batch) {
-        TextureRegion currentFrame = null;
+        TextureRegion currentFrame;
 
-        // --- ANİMASYON ÖNCELİK MANTIĞI ---
-
-        // 1. ÖNCELİK: Saldırıyorsa -> Attack
+        // Animation Priority Logic
         if (isAttacking) {
             String strategyName = attackStrategy.getClass().getSimpleName();
             if (strategyName.contains("Bow")) {
@@ -177,32 +153,25 @@ public class Player {
                 attackAnim.setPlayMode(Animation.PlayMode.NORMAL);
                 currentFrame = attackAnim.getKeyFrame(stateTime);
             }
-        }
-        // 2. ÖNCELİK: Yerde Değilse (Havadaysa) -> JUMP (YENİ EKLENEN KISIM)
-        else if (!onGround) {
-            // Zıplama genelde döngüye girmez, son karede kalması daha doğal durur
-            // Ama basit olsun diye şimdilik LOOP yapıyoruz.
+        } else if (!onGround) {
             jumpAnim.setPlayMode(Animation.PlayMode.LOOP);
             currentFrame = jumpAnim.getKeyFrame(stateTime, true);
-        }
-        // 3. ÖNCELİK: Hareket ediyorsa -> Run
-        else if (Math.abs(velocity.x) > 10) {
+        } else if (Math.abs(velocity.x) > 10) {
             runAnim.setPlayMode(Animation.PlayMode.LOOP);
             currentFrame = runAnim.getKeyFrame(stateTime, true);
-        }
-        // 4. ÖNCELİK: Duruyorsa -> Idle
-        else {
+        } else {
             idleAnim.setPlayMode(Animation.PlayMode.LOOP);
             currentFrame = idleAnim.getKeyFrame(stateTime, true);
         }
 
-        // --- FLIP VE RENK KODLARI AYNEN KALIYOR ---
+        // Handle Flipping
         if (facingDirection == -1 && !currentFrame.isFlipX()) {
             currentFrame.flip(true, false);
         } else if (facingDirection == 1 && currentFrame.isFlipX()) {
             currentFrame.flip(true, false);
         }
 
+        // Handle Damage Visuals
         if (isHurt) batch.setColor(Color.RED);
         else if (invulnerabilityTimer > 0) batch.setColor(1, 1, 1, 0.5f);
         else batch.setColor(Color.WHITE);
@@ -217,16 +186,9 @@ public class Player {
     }
 
     public void performAttack(Array<Enemy> enemies, Array<Bullet> bullets) {
-        // Cooldown kontrolü
         if (attackCooldownTimer <= 0) {
-            // 1. Saldırı işlemini yap (Hasar ver / Mermi oluştur)
             attackStrategy.attack(this, enemies, bullets);
-
-            // 2. Animasyonu başlat
             isAttacking = true;
-
-            // Animasyon süresini ayarla (stateTime'ı o ana senkronize etmek için biraz hile yapabiliriz
-            // ama basitçe animasyon süresi kadar kilitliyoruz)
 
             String strategyName = attackStrategy.getClass().getSimpleName();
             if (strategyName.contains("Bow")) {
@@ -234,20 +196,12 @@ public class Player {
             } else {
                 attackAnimTimer = attackAnim.getAnimationDuration();
             }
-
-            // Animasyonun baştan başlaması için stateTime'ı sıfırlamak yerine
-            // Animation class'ının stateTime mantığını kullanıyoruz.
-            // Ancak basit yöntem: Saldırı başladığında global stateTime'ı sıfırlarsak diğer animasyonlar titreyebilir.
-            // En temizi: draw metodunda attack için (stateTime - attackStartTime) kullanmaktır.
-            // Ama şimdilik basit tutmak adına stateTime kullanıyoruz, sadece görsel akışı devam eder.
-            // Daha doğru görünmesi için:
-            stateTime = 0;
-
-            attackCooldownTimer = 0.5f; // Cooldown
+            stateTime = 0; // Reset animation time for correct start
+            attackCooldownTimer = 0.5f;
         }
     }
 
-    // --- MEVCUT METOTLAR (Getter/Setter/Helper) ---
+    // --- Helpers & Getters ---
     public void moveX(int direction) {
         if (knockbackVelocity.len() > 50f) return;
         velocity.x = direction * MOVE_SPEED;

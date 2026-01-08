@@ -22,7 +22,7 @@ public class PauseMenuOverlay {
         this.gameScreen = gameScreen;
         this.stage = new Stage(new ScreenViewport());
 
-        // Semi-transparan arka plan oluştur
+        // Create semi-transparent background
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(0, 0, 0, 0.7f);
         pixmap.fill();
@@ -33,28 +33,26 @@ public class PauseMenuOverlay {
     }
 
     private void setupUI() {
-        // Font
+        // Style Setup
         BitmapFont font = new BitmapFont();
         font.getData().setScale(2);
 
-        // Button style
         TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
         btnStyle.font = font;
         btnStyle.fontColor = Color.WHITE;
         btnStyle.downFontColor = Color.GRAY;
 
-        // Table layout
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
 
-        // Butonlar
+        // Buttons
         TextButton resumeBtn = new TextButton("RESUME", btnStyle);
         TextButton saveBtn = new TextButton("SAVE GAME", btnStyle);
         TextButton loadBtn = new TextButton("LOAD GAME", btnStyle);
         TextButton quitBtn = new TextButton("QUIT TO MENU", btnStyle);
 
-        // Resume butonu
+        // Listeners
         resumeBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -62,7 +60,6 @@ public class PauseMenuOverlay {
             }
         });
 
-        // Save butonu
         saveBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -70,7 +67,6 @@ public class PauseMenuOverlay {
             }
         });
 
-        // Load butonu
         loadBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -79,7 +75,6 @@ public class PauseMenuOverlay {
             }
         });
 
-        // Quit butonu
         quitBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
