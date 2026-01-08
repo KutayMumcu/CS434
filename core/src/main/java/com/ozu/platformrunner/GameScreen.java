@@ -23,6 +23,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.ozu.platformrunner.entities.Arrow;
 import com.ozu.platformrunner.entities.BossEnemy;
 import com.ozu.platformrunner.entities.Bullet;
+import com.ozu.platformrunner.entities.ChasingEnemy;
+import com.ozu.platformrunner.entities.PatrollingEnemy;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.entities.Platform;
 import com.ozu.platformrunner.entities.Player;
@@ -114,6 +116,10 @@ public class GameScreen implements Screen {
         // YENİ: HUD'u stage ile başlat
         hud = new HUD(stage);
         player.addObserver(hud);
+
+        // Initialize HUD with current level and score
+        hud.updateLevel(currentLevelId);
+        hud.updateScore(GameManager.getInstance().getScore());
 
         // Girdi Yöneticisi: Hem UI (Stage) hem Oyun için
         // InputMultiplexer ile hem Stage hem keyboard inputlarını işle
@@ -253,14 +259,21 @@ public class GameScreen implements Screen {
         // Track elapsed time
         elapsedTime += delta;
 
-        // Death: Instant restart of current level
+        // Death: Reset score and restart current level
         if (player.getHealth() <= 0) {
+            GameManager.getInstance().setScore(0);
+            System.out.println("Player died! Score reset to 0");
             mainGame.setScreen(new GameScreen(mainGame, currentLevelId));
             return;
         }
 
         // Victory: Show victory screen with stats
         if (enemies.size == 0) {
+            // Award level completion bonus
+            GameManager.getInstance().addScore(GameConstants.SCORE_COMPLETE_LEVEL);
+            hud.updateScore(GameManager.getInstance().getScore());
+            System.out.println("Level Complete! +" + GameConstants.SCORE_COMPLETE_LEVEL + " bonus points!");
+
             mainGame.setScreen(new VictoryScreen(
                 mainGame,
                 currentLevelId,
@@ -297,9 +310,11 @@ public class GameScreen implements Screen {
 
             // Arrow hits player
             if (a.active && Intersector.overlaps(a.getBounds(), player.getBounds())) {
-                player.takeDamage(15); // Increased from 8 to 15
-                float knockbackDir = (player.getBounds().x < a.getBounds().x) ? -1 : 1;
-                player.applyKnockback(knockbackDir, 250f);
+                if (!player.isInvulnerable()) {
+                    player.takeDamage(GameConstants.ARROW_DAMAGE);
+                    float knockbackDir = (player.getBounds().x < a.getBounds().x) ? -1 : 1;
+                    player.applyKnockback(knockbackDir, GameConstants.ARROW_HIT_KNOCKBACK);
+                }
                 a.deactivate();
             }
 
@@ -317,7 +332,15 @@ public class GameScreen implements Screen {
             } else {
                 e.update(delta, player, platforms);
             }
-            if (e.isDead()) enemies.removeIndex(i);
+
+            // Award score when enemy dies
+            if (e.isDead()) {
+                int scoreValue = getScoreForEnemy(e);
+                GameManager.getInstance().addScore(scoreValue);
+                hud.updateScore(GameManager.getInstance().getScore());
+                System.out.println("Enemy killed! +" + scoreValue + " points. Total: " + GameManager.getInstance().getScore());
+                enemies.removeIndex(i);
+            }
         }
 
         // Update sword slashes
@@ -332,11 +355,13 @@ public class GameScreen implements Screen {
         // Enemy collision with player (damage player)
         for (Enemy enemy : enemies) {
             if (Intersector.overlaps(player.getBounds(), enemy.getBounds())) {
-                player.takeDamage(12); // Increased from 5 to 12
+                if (!player.isInvulnerable()) {
+                    player.takeDamage(GameConstants.ENEMY_COLLISION_DAMAGE);
 
-                // Apply smooth knockback
-                float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
-                player.applyKnockback(knockbackDirection, 300f);
+                    // Apply smooth knockback
+                    float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
+                    player.applyKnockback(knockbackDirection, GameConstants.ENEMY_COLLISION_KNOCKBACK);
+                }
             }
         }
 
@@ -466,6 +491,21 @@ public class GameScreen implements Screen {
 
     public MainGame getMainGame() {
         return mainGame;
+    }
+
+    /**
+     * Calculate score value based on enemy type
+     * Demonstrates Strategy/Factory patterns - different enemies have different values
+     */
+    private int getScoreForEnemy(Enemy enemy) {
+        if (enemy instanceof BossEnemy) {
+            return GameConstants.SCORE_KILL_BOSS_ENEMY;
+        } else if (enemy instanceof ChasingEnemy) {
+            return GameConstants.SCORE_KILL_CHASING_ENEMY;
+        } else if (enemy instanceof PatrollingEnemy) {
+            return GameConstants.SCORE_KILL_PATROLLING_ENEMY;
+        }
+        return 50; // Default fallback
     }
 
     @Override

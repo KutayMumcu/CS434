@@ -24,5 +24,10 @@ public class MainGame extends Game {
         super.dispose();
         // Kaynakları temizle
         ResourceManager.getInstance().dispose();
+
+        // Dispose static textures to prevent memory leaks
+        com.ozu.platformrunner.entities.Enemy.disposeStaticResources();
+        com.ozu.platformrunner.entities.Platform.disposeStaticResources();
+        com.ozu.platformrunner.entities.SwordSlash.disposeStaticResources();
     }
 }

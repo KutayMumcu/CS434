@@ -2,6 +2,7 @@ package com.ozu.platformrunner.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.ozu.platformrunner.GameConstants;
 import com.ozu.platformrunner.patterns.observer.GameEvent;
 import com.ozu.platformrunner.patterns.observer.GameObserver;
 import com.ozu.platformrunner.patterns.state.IdleState;
@@ -15,10 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
-    // Fizik Sabitleri
-    private static final float MOVE_SPEED = 200f;
-    private static final float JUMP_VELOCITY = 450f; // Zıplama gücü
-    private static final float GRAVITY = -900f;      // Yerçekimi
+    // Fizik Sabitleri - now using GameConstants
+    private static final float MOVE_SPEED = GameConstants.PLAYER_MOVE_SPEED;
+    private static final float JUMP_VELOCITY = GameConstants.PLAYER_JUMP_VELOCITY;
+    private static final float GRAVITY = GameConstants.PLAYER_GRAVITY;
 
     private final Rectangle bounds;
     private final Vector2 velocity;
@@ -28,11 +29,11 @@ public class Player {
     private AttackStrategy attackStrategy;
 
     // Can Sistemi
-    private int health = 100;
+    private int health = GameConstants.PLAYER_MAX_HEALTH;
     private final List<GameObserver> observers;
 
     // Harita Sınırı
-    private static final float MAP_WIDTH = 2000f;
+    private static final float MAP_WIDTH = GameConstants.MAP_LIMIT_X;
 
     private int facingDirection = 1; // 1: Sağ, -1: Sol
 
@@ -42,7 +43,7 @@ public class Player {
     private static final float HURT_DURATION = 0.5f;
     private Vector2 knockbackVelocity = new Vector2(0, 0);
     private float invulnerabilityTimer = 0f;
-    private static final float INVULNERABILITY_DURATION = 1.0f;
+    private static final float INVULNERABILITY_DURATION = GameConstants.PLAYER_INVULNERABILITY_TIME;
 
     // Attack Cooldown System
     private float attackCooldown = 0.5f;

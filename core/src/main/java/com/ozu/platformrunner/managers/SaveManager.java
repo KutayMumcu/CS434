@@ -139,10 +139,10 @@ public class SaveManager {
             player.equipWeapon(new SwordStrategy());
         }
 
-        // Oyun durumu
+        // Oyun durumu - directly restore from memento
         GameManager.getInstance().setLevel(memento.level);
-        GameManager.getInstance().resetGame();
-        GameManager.getInstance().addScore(memento.score);
+        GameManager.getInstance().setScore(memento.score);
+        GameManager.getInstance().setCurrentState(GameManager.GameState.PLAYING);
 
         // Düşmanları geri yükle
         enemies.clear();

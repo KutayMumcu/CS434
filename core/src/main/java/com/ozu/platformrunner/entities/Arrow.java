@@ -5,13 +5,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Pool;
+import com.ozu.platformrunner.GameConstants;
 import com.ozu.platformrunner.managers.ResourceManager;
 
 public class Arrow implements Pool.Poolable {
     private final Rectangle bounds;
-    private float speed = 300f;
+    private float speed = GameConstants.ARROW_SPEED;
     private int direction;
-    private int damage = 8;
+    private int damage = GameConstants.BOW_DAMAGE;
     private Texture texture;
     public boolean active;
 

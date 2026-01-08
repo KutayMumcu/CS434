@@ -55,4 +55,15 @@ public class SwordSlash {
         // Reset color
         batch.setColor(Color.WHITE);
     }
+
+    /**
+     * Dispose static resources - call this when game exits
+     * Prevents memory leaks from static textures
+     */
+    public static void disposeStaticResources() {
+        if (slashTexture != null) {
+            slashTexture.dispose();
+            slashTexture = null;
+        }
+    }
 }

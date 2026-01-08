@@ -4,12 +4,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Pool; // Poolable importu
+import com.ozu.platformrunner.GameConstants;
 import com.ozu.platformrunner.managers.ResourceManager;
 
 // Pool.Poolable implemente ediyoruz
 public class Bullet implements Pool.Poolable {
     private final Rectangle bounds;
-    private float speed = 400f;
+    private float speed = GameConstants.BULLET_SPEED;
     private int direction;
     private Texture texture;
     public boolean active; // Public yaptık ki dışarıdan erişip kontrol edelim
@@ -44,7 +45,8 @@ public class Bullet implements Pool.Poolable {
         bounds.x += speed * direction * delta;
 
         // Ekrandan çıkınca pasife çek (Pool'a iade edilmeye hazır)
-        if (bounds.x < 0 || bounds.x > 2000) { // 2000: Dünya genişliği
+        if (bounds.x < -GameConstants.PROJECTILE_DESPAWN_MARGIN ||
+            bounds.x > GameConstants.MAP_LIMIT_X + GameConstants.PROJECTILE_DESPAWN_MARGIN) {
             active = false;
         }
     }

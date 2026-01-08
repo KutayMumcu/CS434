@@ -48,4 +48,15 @@ public class Platform {
     public Rectangle getBounds() {
         return bounds;
     }
+
+    /**
+     * Dispose static resources - call this when game exits
+     * Prevents memory leaks from static textures
+     */
+    public static void disposeStaticResources() {
+        if (platformTexture != null) {
+            platformTexture.dispose();
+            platformTexture = null;
+        }
+    }
 }

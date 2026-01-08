@@ -34,6 +34,7 @@ public class GameManager {
 
     public int getScore() { return score; }
     public void addScore(int value) { this.score += value; }
+    public void setScore(int score) { this.score = score; }
 
     public int getCurrentLevel() { return currentLevel; }
 

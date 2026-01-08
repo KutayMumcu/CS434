@@ -1,12 +1,13 @@
 package com.ozu.platformrunner.patterns.strategy;
 
 import com.badlogic.gdx.utils.Array;
+import com.ozu.platformrunner.GameConstants;
 import com.ozu.platformrunner.entities.Bullet;
 import com.ozu.platformrunner.entities.Enemy;
 import com.ozu.platformrunner.entities.Player;
 
 public class SwordStrategy implements AttackStrategy {
-    private float range = 80f; // Menzili biraz artırdım
+    private float range = 80f;
 
     @Override
     public void attack(Player player, Array<Enemy> enemies, Array<Bullet> bullets) {
@@ -20,8 +21,8 @@ public class SwordStrategy implements AttackStrategy {
             // Eğer menzildeyse VE aynı yükseklikteyse (yDistance kontrolü önemli)
             if (distance < range && yDistance < 50) {
 
-                // --- DÜZELTME 2: GERÇEK HASAR VERME ---
-                enemy.takeDamage(10);
+                // Hasar ver
+                enemy.takeDamage(GameConstants.SWORD_DAMAGE);
 
                 // Vurulan düşmanı biraz geri it (Geri tepme efekti)
                 if (enemy.getBounds().x > player.getBounds().x) {
@@ -30,7 +31,7 @@ public class SwordStrategy implements AttackStrategy {
                     enemy.getBounds().x -= 30;
                 }
 
-                System.out.println("Düşmana hasar verildi! Kalan can: " + enemy.getBounds());
+                System.out.println("Düşmana hasar verildi! Kalan can: " + enemy.getCurrentHealth());
             }
         }
     }

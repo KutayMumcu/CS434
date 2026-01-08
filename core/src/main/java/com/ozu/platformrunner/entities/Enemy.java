@@ -181,4 +181,15 @@ public abstract class Enemy {
     public int getCurrentHealth() { return currentHealth; }
     public void setHealth(int health) { this.currentHealth = health; }
     public Vector2 getVelocity() { return velocity; }
+
+    /**
+     * Dispose static resources - call this when game exits
+     * Prevents memory leaks from static textures
+     */
+    public static void disposeStaticResources() {
+        if (healthBarTexture != null) {
+            healthBarTexture.dispose();
+            healthBarTexture = null;
+        }
+    }
 }

@@ -10,16 +10,31 @@ import com.ozu.platformrunner.patterns.observer.GameObserver;
 
 public class HUD implements GameObserver {
     private Label healthLabel;
+    private Label scoreLabel;
+    private Label levelLabel;
 
     public HUD(Stage stage) { // Stage parametresi alıyor
         BitmapFont font = new BitmapFont();
         Label.LabelStyle style = new Label.LabelStyle(font, Color.WHITE);
 
+        // Health label - top left
         healthLabel = new Label("Health: 100", style);
         healthLabel.setFontScale(2);
-        healthLabel.setPosition(20, 440); // Sol üst köşe (Ekran koordinatı)
+        healthLabel.setPosition(20, 440);
+        stage.addActor(healthLabel);
 
-        stage.addActor(healthLabel); // Label'ı Stage'e ekle
+        // Score label - top left, below health
+        scoreLabel = new Label("Score: 0", style);
+        scoreLabel.setFontScale(1.5f);
+        scoreLabel.setPosition(20, 410);
+        scoreLabel.setColor(Color.YELLOW);
+        stage.addActor(scoreLabel);
+
+        // Level label - top right
+        levelLabel = new Label("Level: 1", style);
+        levelLabel.setFontScale(1.5f);
+        levelLabel.setPosition(650, 440);
+        stage.addActor(levelLabel);
     }
 
     @Override
@@ -33,6 +48,14 @@ public class HUD implements GameObserver {
                 healthLabel.setColor(Color.RED);
                 break;
         }
+    }
+
+    public void updateScore(int score) {
+        scoreLabel.setText("Score: " + score);
+    }
+
+    public void updateLevel(int level) {
+        levelLabel.setText("Level: " + level);
     }
 
     // dispose metoduna gerek kalmadı, Stage fontu temizler.
