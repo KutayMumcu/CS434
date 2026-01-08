@@ -84,7 +84,7 @@ public class GameScreen implements Screen {
 
         platformTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_PLATFORM);
 
-        player = new Player(50, 200, 32, 32);
+        player = new Player(50, 200, 96, 96);
         platforms = new Array<>();
         enemies = new Array<>();
         bullets = new Array<>();
