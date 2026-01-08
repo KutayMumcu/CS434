@@ -39,10 +39,15 @@ import com.ozu.platformrunner.patterns.state.PausedState;
 import com.ozu.platformrunner.patterns.state.PlayingState;
 import com.ozu.platformrunner.patterns.strategy.BowStrategy;
 import com.ozu.platformrunner.patterns.strategy.SwordStrategy;
+import com.ozu.platformrunner.patterns.strategy.WeaponType;
 import com.ozu.platformrunner.ui.HUD;
 import com.ozu.platformrunner.utils.GameConstants;
 
 public class GameScreen implements Screen {
+
+    private static final float STEP_TIME = 1 / 60f;
+    private static final float MAX_FRAME_TIME = 0.25f;
+    private float accumulator = 0f;
 
     private ShapeRenderer shapeRenderer;
     private boolean debugMode = false;
@@ -73,7 +78,6 @@ public class GameScreen implements Screen {
     private int currentLevelId;
     private float elapsedTime;
 
-    // State Pattern
     private GameScreenState screenState;
     private boolean isPaused = false;
 
@@ -99,7 +103,6 @@ public class GameScreen implements Screen {
         inputHandler = new InputHandler();
         saveManager = new SaveManager();
 
-        // Level Loading Logic
         if (levelId == -1) {
             GameStateMemento memento = saveManager.loadMemento();
             if (memento != null) {
@@ -122,7 +125,6 @@ public class GameScreen implements Screen {
         hud.updateLevel(currentLevelId);
         hud.updateScore(GameManager.getInstance().getScore());
 
-        // Input Multiplexer (UI + Game)
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(stage);
         multiplexer.addProcessor(new InputAdapter() {
@@ -137,12 +139,154 @@ public class GameScreen implements Screen {
         screenState.enter(this);
     }
 
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if (isPaused) {
+            renderPausedState(delta);
+            return;
+        }
+
+        handleInput();
+
+        float frameTime = Math.min(delta, MAX_FRAME_TIME);
+        accumulator += frameTime;
+
+        while (accumulator >= STEP_TIME) {
+            updatePhysics(STEP_TIME);
+            accumulator -= STEP_TIME;
+        }
+
+        updateCamera();
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        for (Platform p : platforms) p.draw(batch);
+        player.draw(batch);
+
+        if (player.isAttackOnCooldown()) {
+            float cooldownPercent = player.getAttackCooldownPercent();
+            float overlayHeight = player.getBounds().height * cooldownPercent;
+            batch.setColor(0.2f, 0.2f, 0.2f, 0.5f);
+            batch.draw(platformTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, overlayHeight);
+            batch.setColor(Color.WHITE);
+        }
+
+        for (Enemy e : enemies) e.draw(batch);
+        for (Bullet b : bullets) if (b.active) b.draw(batch);
+        for (Arrow a : arrows) if (a.active) a.draw(batch);
+        for (SwordSlash slash : swordSlashes) slash.draw(batch);
+
+        batch.end();
+
+        stage.act();
+        stage.draw();
+
+        if (debugMode) renderDebug();
+    }
+
+    private void updatePhysics(float dt) {
+        elapsedTime += dt;
+
+        if (player.getHealth() <= 0) {
+            GameManager.getInstance().setScore(0);
+            mainGame.setScreen(new GameScreen(mainGame, currentLevelId));
+            return;
+        }
+
+        if (enemies.size == 0) {
+            GameManager.getInstance().addScore(GameConstants.SCORE_COMPLETE_LEVEL);
+            hud.updateScore(GameManager.getInstance().getScore());
+            mainGame.setScreen(new VictoryScreen(mainGame, currentLevelId, GameManager.getInstance().getScore(), player.getHealth(), elapsedTime));
+            return;
+        }
+
+        player.update(dt);
+        checkCollisions();
+
+        for (int i = bullets.size - 1; i >= 0; i--) {
+            Bullet b = bullets.get(i);
+            b.update(dt);
+            for (Enemy e : enemies) {
+                if (b.active && Intersector.overlaps(b.getBounds(), e.getBounds())) {
+                    e.takeDamage(10);
+                    b.active = false;
+                }
+            }
+            if (!b.active) {
+                bullets.removeIndex(i);
+                PoolManager.getInstance().bulletPool.free(b);
+            }
+        }
+
+        for (int i = arrows.size - 1; i >= 0; i--) {
+            Arrow a = arrows.get(i);
+            a.update(dt);
+            if (a.active && Intersector.overlaps(a.getBounds(), player.getBounds())) {
+                if (!player.isInvulnerable()) {
+                    player.takeDamage(GameConstants.ARROW_DAMAGE);
+                    float knockbackDir = (player.getBounds().x < a.getBounds().x) ? -1 : 1;
+                    player.applyKnockback(knockbackDir, GameConstants.ARROW_HIT_KNOCKBACK);
+                }
+                a.deactivate();
+            }
+            if (!a.active) {
+                arrows.removeIndex(i);
+                PoolManager.getInstance().arrowPool.free(a);
+            }
+        }
+
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            Enemy e = enemies.get(i);
+            if (e instanceof BossEnemy) {
+                ((BossEnemy) e).updateAndShoot(dt, player, platforms, arrows);
+            } else {
+                e.update(dt, player, platforms);
+            }
+
+            if (e.isDead()) {
+                int scoreValue = getScoreForEnemy(e);
+                GameManager.getInstance().addScore(scoreValue);
+                hud.updateScore(GameManager.getInstance().getScore());
+                enemies.removeIndex(i);
+            }
+        }
+
+        for (int i = swordSlashes.size - 1; i >= 0; i--) {
+            SwordSlash slash = swordSlashes.get(i);
+            slash.update(dt);
+            if (slash.isFinished()) swordSlashes.removeIndex(i);
+        }
+
+        for (Enemy enemy : enemies) {
+            if (Intersector.overlaps(player.getBounds(), enemy.getBounds())) {
+                if (!player.isInvulnerable()) {
+                    player.takeDamage(GameConstants.ENEMY_COLLISION_DAMAGE);
+                    float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
+                    player.applyKnockback(knockbackDirection, GameConstants.ENEMY_COLLISION_KNOCKBACK);
+                }
+            }
+        }
+    }
+
+    private void updateCamera() {
+        float camX = player.getBounds().x;
+        if (camX < 400) camX = 400;
+        if (camX > MAP_LIMIT_X - 400) camX = MAP_LIMIT_X - 400;
+        camera.position.set(camX, 240, 0);
+        camera.update();
+    }
+
     private void handleInput() {
         inputHandler.handleInput(player);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
             player.performAttack(enemies, bullets);
-            if (player.getAttackStrategy().getClass().getSimpleName().contains("Sword")) {
+
+            if (player.getAttackStrategy().getWeaponType() == WeaponType.MELEE) {
                 float slashX = player.getBounds().x + (player.getFacingDirection() > 0 ? player.getBounds().width : -40);
                 float slashY = player.getBounds().y + 5;
                 swordSlashes.add(new SwordSlash(slashX, slashY, player.getFacingDirection()));
@@ -170,7 +314,6 @@ public class GameScreen implements Screen {
         player.setOnGround(false);
 
         for (Platform platform : platforms) {
-            // Platform Top Logic
             float playerBottom = player.getBounds().y;
             float platformTop = platform.getBounds().y + platform.getBounds().height;
             float verticalDistance = Math.abs(playerBottom - platformTop);
@@ -183,7 +326,6 @@ public class GameScreen implements Screen {
                 player.setOnGround(true);
             }
 
-            // General Intersection Logic
             if (Intersector.overlaps(player.getBounds(), platform.getBounds())) {
                 Rectangle intersection = new Rectangle();
                 Intersector.intersectRectangles(player.getBounds(), platform.getBounds(), intersection);
@@ -209,6 +351,30 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void renderDebug() {
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
+
+        shapeRenderer.setColor(Color.GREEN);
+        for (Platform p : platforms) {
+            shapeRenderer.rect(p.getBounds().x, p.getBounds().y, p.getBounds().width, p.getBounds().height);
+        }
+
+        shapeRenderer.setColor(Color.ORANGE);
+        for (Enemy e : enemies) {
+            shapeRenderer.rect(e.getBounds().x, e.getBounds().y, e.getBounds().width, e.getBounds().height);
+        }
+
+        shapeRenderer.setColor(Color.YELLOW);
+        for (Bullet b : bullets) {
+            if (b.active) shapeRenderer.rect(b.getBounds().x, b.getBounds().y, b.getBounds().width, b.getBounds().height);
+        }
+        shapeRenderer.end();
+    }
+
     private void setupUI() {
         BitmapFont font = new BitmapFont();
         TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
@@ -228,165 +394,7 @@ public class GameScreen implements Screen {
         stage.addActor(menuBtn);
     }
 
-    @Override
-    public void render(float delta) {
-        if (isPaused) {
-            renderPausedState(delta);
-            return;
-        }
-
-        elapsedTime += delta;
-
-        // Death Check
-        if (player.getHealth() <= 0) {
-            GameManager.getInstance().setScore(0);
-            mainGame.setScreen(new GameScreen(mainGame, currentLevelId));
-            return;
-        }
-
-        // Victory Check
-        if (enemies.size == 0) {
-            GameManager.getInstance().addScore(GameConstants.SCORE_COMPLETE_LEVEL);
-            hud.updateScore(GameManager.getInstance().getScore());
-            mainGame.setScreen(new VictoryScreen(mainGame, currentLevelId, GameManager.getInstance().getScore(), player.getHealth(), elapsedTime));
-            return;
-        }
-
-        // Updates
-        handleInput();
-        player.update(delta);
-        checkCollisions();
-
-        // Projectile Updates
-        for (int i = bullets.size - 1; i >= 0; i--) {
-            Bullet b = bullets.get(i);
-            b.update(delta);
-            for (Enemy e : enemies) {
-                if (b.active && Intersector.overlaps(b.getBounds(), e.getBounds())) {
-                    e.takeDamage(10);
-                    b.active = false;
-                }
-            }
-            if (!b.active) {
-                bullets.removeIndex(i);
-                PoolManager.getInstance().bulletPool.free(b);
-            }
-        }
-
-        for (int i = arrows.size - 1; i >= 0; i--) {
-            Arrow a = arrows.get(i);
-            a.update(delta);
-            if (a.active && Intersector.overlaps(a.getBounds(), player.getBounds())) {
-                if (!player.isInvulnerable()) {
-                    player.takeDamage(GameConstants.ARROW_DAMAGE);
-                    float knockbackDir = (player.getBounds().x < a.getBounds().x) ? -1 : 1;
-                    player.applyKnockback(knockbackDir, GameConstants.ARROW_HIT_KNOCKBACK);
-                }
-                a.deactivate();
-            }
-            if (!a.active) {
-                arrows.removeIndex(i);
-                PoolManager.getInstance().arrowPool.free(a);
-            }
-        }
-
-        // Enemy Updates
-        for (int i = enemies.size - 1; i >= 0; i--) {
-            Enemy e = enemies.get(i);
-            if (e instanceof BossEnemy) {
-                ((BossEnemy) e).updateAndShoot(delta, player, platforms, arrows);
-            } else {
-                e.update(delta, player, platforms);
-            }
-
-            if (e.isDead()) {
-                int scoreValue = getScoreForEnemy(e);
-                GameManager.getInstance().addScore(scoreValue);
-                hud.updateScore(GameManager.getInstance().getScore());
-                enemies.removeIndex(i);
-            }
-        }
-
-        for (int i = swordSlashes.size - 1; i >= 0; i--) {
-            SwordSlash slash = swordSlashes.get(i);
-            slash.update(delta);
-            if (slash.isFinished()) swordSlashes.removeIndex(i);
-        }
-
-        // Player vs Enemy Collision
-        for (Enemy enemy : enemies) {
-            if (Intersector.overlaps(player.getBounds(), enemy.getBounds())) {
-                if (!player.isInvulnerable()) {
-                    player.takeDamage(GameConstants.ENEMY_COLLISION_DAMAGE);
-                    float knockbackDirection = (player.getBounds().x < enemy.getBounds().x) ? -1 : 1;
-                    player.applyKnockback(knockbackDirection, GameConstants.ENEMY_COLLISION_KNOCKBACK);
-                }
-            }
-        }
-
-        // Camera Update
-        float camX = player.getBounds().x;
-        if (camX < 400) camX = 400;
-        if (camX > MAP_LIMIT_X - 400) camX = MAP_LIMIT_X - 400;
-        camera.position.set(camX, 240, 0);
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-
-        // Rendering
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
-        for (Platform p : platforms) p.draw(batch);
-        player.draw(batch);
-
-        if (player.isAttackOnCooldown()) {
-            float cooldownPercent = player.getAttackCooldownPercent();
-            float overlayHeight = player.getBounds().height * cooldownPercent;
-            batch.setColor(0.2f, 0.2f, 0.2f, 0.5f);
-            batch.draw(platformTexture, player.getBounds().x, player.getBounds().y, player.getBounds().width, overlayHeight);
-            batch.setColor(Color.WHITE);
-        }
-
-        for (Enemy e : enemies) e.draw(batch);
-        for (Bullet b : bullets) if (b.active) b.draw(batch);
-        for (Arrow a : arrows) if (a.active) a.draw(batch);
-        for (SwordSlash slash : swordSlashes) slash.draw(batch);
-        batch.end();
-
-        stage.act();
-        stage.draw();
-
-        // Debug Renderer (F1)
-        if (debugMode) {
-            shapeRenderer.setProjectionMatrix(camera.combined);
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.rect(player.getBounds().x, player.getBounds().y, player.getBounds().width, player.getBounds().height);
-
-            shapeRenderer.setColor(Color.GREEN);
-            for (Platform p : platforms) {
-                shapeRenderer.rect(p.getBounds().x, p.getBounds().y, p.getBounds().width, p.getBounds().height);
-            }
-
-            shapeRenderer.setColor(Color.ORANGE);
-            for (Enemy e : enemies) {
-                shapeRenderer.rect(e.getBounds().x, e.getBounds().y, e.getBounds().width, e.getBounds().height);
-            }
-
-            shapeRenderer.setColor(Color.YELLOW);
-            for (Bullet b : bullets) {
-                if (b.active) shapeRenderer.rect(b.getBounds().x, b.getBounds().y, b.getBounds().width, b.getBounds().height);
-            }
-            shapeRenderer.end();
-        }
-    }
-
     private void renderPausedState(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         batch.begin();
         for (Platform p : platforms) p.draw(batch);
         player.draw(batch);
