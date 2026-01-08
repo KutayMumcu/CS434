@@ -31,7 +31,7 @@ public abstract class Enemy {
     protected Texture textureRight;
     protected Texture textureLeft;
     protected Texture currentTexture;
-    private static Texture healthBarTexture;
+    private Texture whitePixelTexture;
 
     public Enemy(float x, float y, float width, float height) {
         this.bounds = new Rectangle(x, y, width, height);
@@ -41,16 +41,7 @@ public abstract class Enemy {
         textureRight = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_RIGHT);
         textureLeft = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_ENEMY_LEFT);
         currentTexture = textureRight;
-
-        if (healthBarTexture == null) createHealthBarTexture();
-    }
-
-    private void createHealthBarTexture() {
-        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.WHITE);
-        pixmap.fill();
-        healthBarTexture = new Texture(pixmap);
-        pixmap.dispose();
+        whitePixelTexture = ResourceManager.getInstance().getTexture(ResourceManager.TEXTURE_WHITE_PIXEL);
     }
 
     public void update(float delta, Player player, Array<Platform> platforms) {
@@ -136,11 +127,11 @@ public abstract class Enemy {
         float barY = bounds.y + bounds.height + 5;
 
         batch.setColor(Color.RED);
-        batch.draw(healthBarTexture, barX, barY, bounds.width, 5);
+        batch.draw(whitePixelTexture, barX, barY, bounds.width, 5);
 
         float healthPercentage = (float) currentHealth / maxHealth;
         batch.setColor(Color.GREEN);
-        batch.draw(healthBarTexture, barX, barY, bounds.width * healthPercentage, 5);
+        batch.draw(whitePixelTexture, barX, barY, bounds.width * healthPercentage, 5);
 
         batch.setColor(Color.WHITE);
     }
@@ -155,11 +146,4 @@ public abstract class Enemy {
     public Vector2 getVelocity() { return velocity; }
     public int getCurrentHealth() { return currentHealth; }
     public void setHealth(int health) { this.currentHealth = health; }
-
-    public static void disposeStaticResources() {
-        if (healthBarTexture != null) {
-            healthBarTexture.dispose();
-            healthBarTexture = null;
-        }
-    }
 }
