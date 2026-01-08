@@ -22,7 +22,7 @@ public class LevelSelectScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         BitmapFont font = new BitmapFont();
-        font.getData().setScale(2);
+        font.getData().setScale(1.5f);
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = font;
         buttonStyle.fontColor = Color.YELLOW;
@@ -30,6 +30,7 @@ public class LevelSelectScreen implements Screen {
 
         Table table = new Table();
         table.setFillParent(true);
+        table.center();
         stage.addActor(table);
 
         // LEVEL 1
@@ -37,23 +38,20 @@ public class LevelSelectScreen implements Screen {
         lvl1.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // DÜZELTME: game parametresi eklendi
                 game.setScreen(new GameScreen(game, 1));
             }
         });
-        table.add(lvl1).pad(20);
-        table.row();
+        table.add(lvl1).width(200).height(50).pad(8);
 
         // LEVEL 2
         TextButton lvl2 = new TextButton("LEVEL 2", buttonStyle);
         lvl2.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // DÜZELTME: game parametresi eklendi
                 game.setScreen(new GameScreen(game, 2));
             }
         });
-        table.add(lvl2).pad(20);
+        table.add(lvl2).width(200).height(50).pad(8);
         table.row();
 
         // LEVEL 3
@@ -61,14 +59,12 @@ public class LevelSelectScreen implements Screen {
         lvl3.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // DÜZELTME: game parametresi eklendi
                 game.setScreen(new GameScreen(game, 3));
             }
         });
-        table.add(lvl3).pad(20);
-        table.row();
+        table.add(lvl3).width(200).height(50).pad(8);
 
-        // LEVEL 4 - Vertical Challenge
+        // LEVEL 4
         TextButton lvl4 = new TextButton("LEVEL 4", buttonStyle);
         lvl4.addListener(new ClickListener() {
             @Override
@@ -76,10 +72,10 @@ public class LevelSelectScreen implements Screen {
                 game.setScreen(new GameScreen(game, 4));
             }
         });
-        table.add(lvl4).pad(20);
+        table.add(lvl4).width(200).height(50).pad(8);
         table.row();
 
-        // LEVEL 5 - Enemy Gauntlet
+        // LEVEL 5
         TextButton lvl5 = new TextButton("LEVEL 5", buttonStyle);
         lvl5.addListener(new ClickListener() {
             @Override
@@ -87,10 +83,9 @@ public class LevelSelectScreen implements Screen {
                 game.setScreen(new GameScreen(game, 5));
             }
         });
-        table.add(lvl5).pad(20);
-        table.row();
+        table.add(lvl5).width(200).height(50).pad(8);
 
-        // LEVEL 6 - The Maze
+        // LEVEL 6
         TextButton lvl6 = new TextButton("LEVEL 6", buttonStyle);
         lvl6.addListener(new ClickListener() {
             @Override
@@ -98,10 +93,10 @@ public class LevelSelectScreen implements Screen {
                 game.setScreen(new GameScreen(game, 6));
             }
         });
-        table.add(lvl6).pad(20);
+        table.add(lvl6).width(200).height(50).pad(8);
         table.row();
 
-        // LEVEL 7 - Final Showdown
+        // LEVEL 7
         TextButton lvl7 = new TextButton("LEVEL 7", buttonStyle);
         lvl7.addListener(new ClickListener() {
             @Override
@@ -109,7 +104,7 @@ public class LevelSelectScreen implements Screen {
                 game.setScreen(new GameScreen(game, 7));
             }
         });
-        table.add(lvl7).pad(20);
+        table.add(lvl7).width(200).height(50).pad(8).colspan(2);
     }
 
     @Override
